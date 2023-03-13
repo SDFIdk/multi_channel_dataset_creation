@@ -38,6 +38,9 @@ python create_lidar_images.py
 
 ## Split up all images and labels into smaller patches
 python split.py width 1000 height 1000
+
+## Create text files that defines train and validations splits
+python create_text_files.py 
 	
 
 
