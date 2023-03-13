@@ -6,9 +6,9 @@ Prerequsites are:
 
 copy orto-versioner af alle lod billeder til local disk
 for each iamge:
-    get label for area
-    get forors-orto-foto for area
-    get lidar for area
+    * get label for area
+    * get forors-orto-foto for area
+    * get lidar for area
 	
 
 
