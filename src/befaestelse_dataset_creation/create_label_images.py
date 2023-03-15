@@ -39,7 +39,7 @@ class CreateMasks:
 
 
     def CreateMaskFile(self, source_path, destination_path, feature_workspace, mask_featureclass,
-                 category_field, priority_field, includeEmptyFiles, outputCellSize,load_extnet_from_PIL=True):
+                 category_field, priority_field, includeEmptyFiles, outputCellSize,load_extnet_from_PIL=False):
         """
         :param source_path: folder with images
         :param destination_path: folder with masks
@@ -108,6 +108,9 @@ class CreateMasks:
                 #env.cellSizeProjectionMethod = "PRESERVE_RESOLUTION";
 
                 # Tæl antallet af objekter i fotoets extent (som er sat i geoprocesseringsmiljøet)
+
+                input(mask_featureclass)
+                input(env.workspace)
 
                 object_count = int(str(arcpy.GetCount_management(mask_featureclass)))
 
@@ -212,9 +215,9 @@ def main(config):
 
 
     images = os.listdir(image_folder)
-
-    for im in images:
-        print("workign on image:"+str(im))
+    nr_of_images = len(images)
+    for (index,im) in enumerate(images):
+        print("workign on image:"+str(im) + " index :"+str(index) + " out of a totall of:"+str(nr_of_images) + " images")
 
 
         im_path = str(pathlib.Path(image_folder)/pathlib.Path(im))
