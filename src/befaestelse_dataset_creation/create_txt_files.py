@@ -1,0 +1,37 @@
+import create_all_and_valid_txt
+import create_train_txt
+import configparser
+import argparse
+
+def main(config):
+    ini_parser = configparser.ConfigParser()
+    ini_parser.read(config)
+    section = "SETTINGS"
+    all_txt_filename =ini_parser[section]["all_txt_filename"]
+    valid_txt_filename =ini_parser[section]["valid_txt_filename"]
+    path_to_images =ini_parser[section]["path_to_images"]
+    datatype =ini_parser[section]["datatype"]
+    nr_of_images_between_validation_samples =int(ini_parser[section]["nr_of_images_between_validation_samples"])
+    print("creating all.txt and valid.txt")
+    create_all_and_valid_txt.create_all_and_valid(all_txt_filename =all_txt_filename,valid_txt_filename=valid_txt_filename,path_to_training_images=path_to_images,datatype=datatype,nr_of_images_between_validation_samples=nr_of_images_between_validation_samples)
+    print("creating train.txt")
+    create_train_txt.create_train_txt(path_to_all_txt=all_txt_filename,path_to_valid_txt=valid_txt_filename,name_prefix="")
+
+
+
+if __name__ == "__main__":
+    """
+    Creates patches of a given size for input data(e.g images) and labels-images
+    """
+
+    usage_example="example usage: \n "+r"python create_txt_files.py --config path\to\file.ini"
+    # Initialize parser
+    parser = argparse.ArgumentParser(
+        epilog=usage_example,
+        formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument("-c", "--config", help="one or more paths to config file",nargs ='+',required=True)
+    args = parser.parse_args()
+    main(args.config)
+
+
+

@@ -5,7 +5,10 @@ import os
 from arcpy import env
 from arcpy.sa import *
 from PIL import Image
-
+import configparser
+import argparse
+import arcpy
+import pathlib
 _all__ = ["createmasks"]
 
 
@@ -108,10 +111,6 @@ class CreateMasks:
                 #env.cellSizeProjectionMethod = "PRESERVE_RESOLUTION";
 
                 # Tæl antallet af objekter i fotoets extent (som er sat i geoprocesseringsmiljøet)
-
-                input(mask_featureclass)
-                input(env.workspace)
-
                 object_count = int(str(arcpy.GetCount_management(mask_featureclass)))
 
 
@@ -236,10 +235,7 @@ if __name__ == "__main__":
     
     
     """
-    import configparser
-    import argparse
-    import arcpy
-    import pathlib
+
     usage_example="example usage: \n "+r"python createmasks.py --config path\to\file.ini"
     # Initialize parser
     parser = argparse.ArgumentParser(

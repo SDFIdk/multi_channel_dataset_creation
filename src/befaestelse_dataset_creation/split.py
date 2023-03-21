@@ -30,16 +30,16 @@ class Split():
                            cutdatatype, srs, nodata)
 
 
-    def splitdst(self, in_path, out_path, tile_size_x, tile_size_y,kun_ok_pic=False):
+    def splitdst(self, in_path, out_path, tile_size_x, tile_size_y,cutdatatype,kun_ok_pic=False,ignore_id=0):
         filelist = self.getfiles(in_path)
         filelist.sort()
-        for filename in filelist:
+        for (index,filename) in enumerate(filelist):
+            print("working on image nr: "+str(index) + " out of : "+str(len(filelist)))
 
-            self.splitfile(in_path, out_path, filename, tile_size_x, tile_size_y,kun_ok_pic=kun_ok_pic)
+            self.splitfile(in_path, out_path, filename, tile_size_x, tile_size_y,cutdatatype,kun_ok_pic=kun_ok_pic,nodata=ignore_id)
 
 
-    def splitfile(self, in_path, out_path, filename, tile_size_x, tile_size_y, kun_ok_pic=False, centrer_opklip=False,
-                  cutdatatype="oldstyle", srs="EPSG:25832", nodata=255):
+    def splitfile(self, in_path, out_path, filename, tile_size_x, tile_size_y,cutdatatype, kun_ok_pic=False, centrer_opklip=False,srs="EPSG:25832", nodata=255):
         """
         @ arg kun_ok_pic: Hvis True undgå masker/pic,  der ikke bliver fuld dækket af det oprindelige billede.
         @ arg centrer_opklip: Hvis True center opklippene om omkring midten af det oprindelige billede/mask.
