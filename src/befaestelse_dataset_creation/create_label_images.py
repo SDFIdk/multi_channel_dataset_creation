@@ -41,11 +41,12 @@ class CreateMasks:
 
 
 
-    def CreateMaskFile(self, source_path, destination_path, feature_workspace, mask_featureclass,
+    def CreateMaskFile(self, source_path, raw_mask_folder,mask_folder, feature_workspace, mask_featureclass,
                  category_field, priority_field, includeEmptyFiles, outputCellSize,load_extnet_from_PIL=False):
         """
         :param source_path: folder with images
-        :param destination_path: folder with masks
+        :param raw_mask_folder: folder were the raw masks should be stored masks
+        :param mask_folder : folder where the final masks should be stored
         :param feature_workspace:
         :param mask_featureclass:
         :param category_field: ML_CAt
@@ -64,11 +65,11 @@ class CreateMasks:
         #print("Antal billedfiler der skal behandles: " + str(num_files))
         mask_count = 0
 
-        if not os.path.exists(destination_path):
-            os.makedirs(destination_path)
+        if not os.path.exists(raw_mask_folder):
+            os.makedirs(raw_mask_folder)
 
-        if not os.path.exists(destination_path + '\\reclass'):
-            os.makedirs(destination_path + '\\reclass')
+        if not os.path.exists(mask_folder):
+            os.makedirs(mask_folder)
 
         file = source_path # Loop igennem alle filer i folderen med ortofotos.
         basename = os.path.basename(file)
@@ -102,8 +103,8 @@ class CreateMasks:
             print("extentString: " + extentString)
             x = basename.upper().replace('.PNG','.tif').replace('.JPG','.tif').replace('.TIF','.tif')
             with arcpy.EnvManager(extent=rasterExtent):     # Sæt ortofotoets extent som default-extent i ArcGIS geoprocesserings-miljø.
-                outputFile = destination_path + "\\" + x
-                reclassFile = destination_path + "\\reclass\\" + x
+                outputFile = raw_mask_folder + "\\" + x
+                reclassFile = mask_folder + "\\" + x
                 # bit_reclassFile = destination_path + "\\reclass\\bit_" + x
                 print("Outputdestfile = " + outputFile)
                 env.workspace = feature_workspace
@@ -199,6 +200,7 @@ def main(config):
     gdb_file = ini_parser[section]["gdb_file"]
     mask_featureclass = ini_parser[section]["mask_featureclass"]
 
+    raw_mask_folder = ini_parser[section]["raw_mask_folder"]
     mask_folder = ini_parser[section]["mask_folder"]
 
     image_folder = ini_parser[section]["image_folder"]
@@ -222,8 +224,8 @@ def main(config):
         im_path = str(pathlib.Path(image_folder)/pathlib.Path(im))
         print("im_path:"+str(im_path))
 
-        mask_path = str(pathlib.Path(mask_folder))
-        create_masks_obj.CreateMaskFile(source_path=im_path, destination_path=mask_path, feature_workspace=arcpy_workspace, mask_featureclass=mask_featureclass,
+        #mask_path = str(pathlib.Path(raw_mask_folder))
+        create_masks_obj.CreateMaskFile(source_path=im_path, raw_mask_folder= raw_mask_folder,mask_folder=mask_folder, feature_workspace=arcpy_workspace, mask_featureclass=mask_featureclass,
                                         category_field=category_field, priority_field=priority_field, includeEmptyFiles=includeEmptyFiles, outputCellSize=outputCellSize,load_extnet_from_PIL=False)
 
 

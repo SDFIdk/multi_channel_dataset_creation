@@ -6,6 +6,24 @@ import create_patches
 import argparse
 
 def main(args):
+    if not "create_labels" in args.skip:
+        print("create_labels")
+        #convert the GIS database to label images of same shape as the 'lod-images'
+        #if there are no label data for the area covered by the image, we don create any label
+        create_label_images.main(config=r"..\..\configs\template_create_dataset.ini")
+    if not "create_patches" in args.skip:
+        print("create_patches")
+        #split the data and label-images up into smaler pathces e.g 1000x1000
+        create_patches.main(config=r"..\..\configs\template_create_dataset.ini")
+    if not "remove_empty_label_images" in args.skip:
+        print("remove_empty_label_images")
+        #remove all images without valid labels (label image must exist AND ,must contain pixels with labels !=0)
+        delete_images_with_only_zeroes.main(config=r"..\..\configs\template_create_dataset.ini")
+    if not "create_text_files" in args.skip:
+        print("create_text_files")
+        #divide the dataset into trainingset and validationset and save the split as all.txt, train.txt and valid.txt
+        create_txt_files.main(config=r"..\..\configs\template_create_dataset.ini")
+    '''
 
     if not "create_labels" in args.skip:
         print("create_labels")
@@ -24,6 +42,7 @@ def main(args):
         print("create_text_files")
         #divide the dataset into trainingset and validationset and save the split as all.txt, train.txt and valid.txt
         create_txt_files.main(config=r"..\..\configs\template_create_text_files.ini")
+    '''
 
 
 
@@ -34,7 +53,7 @@ if __name__ == "__main__":
         epilog=usage_example,
         formatter_class=argparse.RawDescriptionHelpFormatter)
 
-    parser.add_argument("--skip",help ="path to folder containing images to be splitted",nargs ='+',required=False)
+    parser.add_argument("--skip",help ="path to folder containing images to be splitted",nargs ='+',default =[],required=False)
 
     args = parser.parse_args()
 

@@ -37,6 +37,7 @@ def delete_files_with_only_zeros_in_label(image_folder,label_folder,datatype):
     images = [image_folder/file for file in os.listdir(image_folder) if pathlib.Path(file).suffix == datatype]
     labels = [label_folder/(file_path.name) for file_path in images]
     for i in range(len(images)):
+        print("checking image : "+str(i) + " out of :"+str(len(images)))
         #if there is no label to open we throw an exception and delete the image
         try:
 
