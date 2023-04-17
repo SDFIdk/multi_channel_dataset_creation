@@ -14,12 +14,13 @@ def main(config):
 
 
     splitted_mask_folder = ini_parser[section]["splitted_mask_folder"]
-    splitted_image_folder = ini_parser[section]["splitted_image_folder"]
-    splitted_cir_image_folder = ini_parser[section]["splitted_cir_image_folder"]
+    images_that_define_areas_to_create_labels_for = ini_parser[section]["images_that_define_areas_to_create_labels_for"]
+    images_that_define_areas_to_create_labels_for= pathlib.Path(images_that_define_areas_to_create_labels_for)
+    splitted_image_folder= images_that_define_areas_to_create_labels_for.with_name("splitted_"+images_that_define_areas_to_create_labels_for.name)
+
     datatype= ini_parser[section]["datatype"]
 
     delete_files_with_only_zeros_in_label(image_folder=splitted_image_folder,label_folder=splitted_mask_folder,datatype=datatype)
-
 
 def delete_files_with_only_zeros_in_label(image_folder,label_folder,datatype):
     """

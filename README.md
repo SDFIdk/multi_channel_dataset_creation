@@ -47,7 +47,10 @@ split.main("configs/template_split.ini")
 ## Create text files that defines train and validations splits
 create_text_files.main("configs/template_split.ini")
 
-
+NOTES creating the folder structure:
+if all your input data is in the same folder and have differetn names depending on the channel, you can move the files to separate folders and rename the files to have the same name like this
+src\befaestelse_dataset_creation>python rename_files.py -i T:\trainingdata\befastelse\befaestelse_dataset_creation_test\data\large_lod_rgb-nir_images -o T:\trainingdata\befastelse\befaestelse_dataset_creation_test\data\large_lod_cir_images -r _cir.tif -n .tif -m --Only_consider_files_with_matching_names
+The example above asumes that we have images that contain rgb information e.g image1.tif and iamges that contain nir information e.g image1_cir.tif in the same folder.
 
 TODO:
 conversion to mask-DINO format

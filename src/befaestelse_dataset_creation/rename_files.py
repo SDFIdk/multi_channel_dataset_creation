@@ -2,6 +2,22 @@ import os
 import argparse
 import pathlib
 import shutil
+
+def main(inputfolder,outputfolder,replacestring,newstring,only_consider_files_with_matching_names,move_instead_of_copy):
+    files = os.listdir(inputfolder)
+    for (index,file) in enumerate(files):
+        print("working on file :"+str(index) + " out of :"+str(len(files)))
+        input_path = pathlib.Path(inputfolder)/pathlib.Path(file)
+        output_path = pathlib.Path(outputfolder)/pathlib.Path(file.replace(replacestring,newstring))
+        if only_consider_files_with_matching_names and replacestring not in file:
+            pass
+        else:
+            if move_instead_of_copy:
+                shutil.move(input_path,output_path)
+            else:
+                shutil.copy2(input_path,output_path)
+
+
 if __name__ == "__main__":
     """
     copy files from a folder to another 
@@ -21,11 +37,12 @@ if __name__ == "__main__":
     parser.add_argument("-o", "--outputfolder", help="path\to\folder",required=True)
     parser.add_argument("-r", "--replacestring", help="e.g original_image",required=True)
     parser.add_argument("-n", "--newstring", help="e.g new_image_copy",required=True)
+    parser.add_argument('-m','--move_instead_of_copy',
+                        help='should we move the file isntead of copying it? -m-> True , no -m -> False: ',action = 'store_true',default=False)
+    parser.add_argument('--Only_consider_files_with_matching_names',
+                        help='Only_consider_files_with_matching_names?',action = 'store_true',default=False)
+
+
     args = parser.parse_args()
 
-    files = os.listdir(args.inputfolder)
-    for (index,file) in enumerate(files):
-        print("working on file :"+str(index) + " out of :"+str(len(files)))
-        input_path = pathlib.Path(args.inputfolder)/pathlib.Path(file)
-        output_path = pathlib.Path(args.outputfolder)/pathlib.Path(file.replace(args.replacestring,args.newstring))
-        shutil.copy2(input_path,output_path)
+    main(args.inputfolder,args.outputfolder,args.replacestring,args.newstring,args.only_consider_files_with_matching_names,args.move_instead_of_copy)

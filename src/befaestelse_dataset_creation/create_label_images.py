@@ -203,7 +203,7 @@ def main(config):
     raw_mask_folder = ini_parser[section]["raw_mask_folder"]
     mask_folder = ini_parser[section]["mask_folder"]
 
-    image_folder = ini_parser[section]["image_folder"]
+    image_folder = ini_parser[section]["images_that_define_areas_to_create_labels_for"]
 
     arcpy_workspace = ini_parser[section]['arcpy_workspace']
     category_field= ini_parser[section]['category_field']
