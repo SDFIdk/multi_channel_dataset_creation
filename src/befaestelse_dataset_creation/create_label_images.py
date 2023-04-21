@@ -42,7 +42,7 @@ class CreateMasks:
 
 
     def CreateMaskFile(self, source_path, raw_mask_folder,mask_folder, feature_workspace, mask_featureclass,
-                 category_field, priority_field, includeEmptyFiles, outputCellSize,load_extnet_from_PIL=False):
+                 category_field, priority_field, includeEmptyFiles, outputCellSize,load_extnet_from_PIL=False,unknown_value2=9):
         """
         :param source_path: folder with images
         :param raw_mask_folder: folder were the raw masks should be stored masks
@@ -53,6 +53,7 @@ class CreateMasks:
         :param priority_field: the name of the field/fælt in the featureclasse that tell us what priority the object has:  should be ''
         :param includeEmptyFiles: this should normally always be true
         :param outputCellSize:
+        :param unknown_value2: the value given to the areas that are manualy labeled as unkown in arcgis (these should be reclassed to 0 to be mergd with the areaas that dont have any labels)
         :return: maskfile: path to label
         """
         maskfile = ""
@@ -130,6 +131,7 @@ class CreateMasks:
                     rawMaskRaster = arcpy.Raster(outputFile)    # Resultatet af konverteringen åbnes
                     emptyRaster = IsNull(rawMaskRaster)         # Udvælg tomme pixels
                     reclassMaskRaster = Con(emptyRaster, 0, rawMaskRaster, "VALUE > 0") # Omkoder tomme pixels til værdien 0 (nul)
+                    reclassMaskRaster = Con([reclassMaskRaster] == unknown_value2, 0 , [reclassMaskRaster]) #all areas that are manually labeled as 'unnown' should get value 0
                     reclassMaskRaster.save(reclassFile)                                 # Gem filen med omkodningen i undermappe "/reclass"
                     mask_count = mask_count+1
                     emptyImages.append(basename)
