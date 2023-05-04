@@ -3,7 +3,7 @@ from PIL import Image
 import numpy
 import pandas as pd
 import argparse
-
+import pathlib
 
 
 
@@ -95,7 +95,9 @@ def create_all_txt(folder_path,datatype,all_txt_filename):
 
     """
  
-    folder_path=folder_path.replace("//","/")
+    #folder_path=folder_path.replace("//","/")
+    folder_path = pathlib.Path(folder_path)
+
     print(folder_path)
     files_in_folder =os.listdir(folder_path)
     print(files_in_folder)

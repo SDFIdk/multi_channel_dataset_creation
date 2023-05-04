@@ -1,5 +1,16 @@
-import create_patches
-import create_label_images
+import os
+import sys
+import inspect
+
+currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
+
+sys.path.insert(0, currentdir)
+
+
+try:
+    import create_label_images
+except:
+    print("failed to import 'create_label_images' are you missing arcpy ?")
 import create_txt_files
 import delete_images_with_only_zeroes
 import create_patches

@@ -10,10 +10,7 @@ def main(config):
 
 
 
-    large_masks_folder = ini_parser[section]["mask_folder"]
 
-
-    splitted_mask_folder = ini_parser[section]["splitted_mask_folder"]
 
 
     tile_size_y = ini_parser[section]["tile_size_y"]
@@ -22,10 +19,16 @@ def main(config):
     ignore_id = int(ini_parser[section]["ignore_id"])
 
 
-    print("splitting the labels in "+str(large_masks_folder)+"and string them in folder :"+str(splitted_mask_folder))
-    Path(splitted_mask_folder).mkdir(parents=True, exist_ok=True)
-    splitf = split.Split()
-    splitf.splitdst(in_path=large_masks_folder, out_path=splitted_mask_folder, tile_size_x=int(ini_parser[section]["tile_size_x"]), tile_size_y=int(ini_parser[section]["tile_size_y"]),kun_ok_pic=False,ignore_id=ignore_id,cutdatatype="mask_NaN")
+    if "mask_folder" in ini_parser[section]:
+        print("dataset includes masks that should be splitted")
+        large_masks_folder = ini_parser[section]["mask_folder"]
+        splitted_mask_folder = ini_parser[section]["splitted_mask_folder"]
+        print("splitting the labels in "+str(large_masks_folder)+"and string them in folder :"+str(splitted_mask_folder))
+        Path(splitted_mask_folder).mkdir(parents=True, exist_ok=True)
+        splitf = split.Split()
+        splitf.splitdst(in_path=large_masks_folder, out_path=splitted_mask_folder, tile_size_x=int(ini_parser[section]["tile_size_x"]), tile_size_y=int(ini_parser[section]["tile_size_y"]),kun_ok_pic=False,ignore_id=ignore_id,cutdatatype="mask_NaN")
+    else:
+        print("dataset does NOT include any masks")
 
 
     datatypes =json.loads(ini_parser[section]["datatypes"])
