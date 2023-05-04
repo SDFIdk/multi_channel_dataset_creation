@@ -66,11 +66,9 @@ class CreateMasks:
         #print("Antal billedfiler der skal behandles: " + str(num_files))
         mask_count = 0
 
-        if not os.path.exists(raw_mask_folder):
-            os.makedirs(raw_mask_folder)
+        os.makedirs(raw_mask_folder,exist_ok=True)
 
-        if not os.path.exists(mask_folder):
-            os.makedirs(mask_folder)
+        os.makedirs(mask_folder,exist_ok=True)
 
         file = source_path # Loop igennem alle filer i folderen med ortofotos.
         basename = os.path.basename(file)
@@ -122,6 +120,9 @@ class CreateMasks:
                     rawMaskRaster = arcpy.Raster(outputFile)
                     emptyRaster = IsNull(rawMaskRaster)
                     reclassMaskRaster = Con(emptyRaster, 0, rawMaskRaster, "VALUE > 0")#make null values 0
+                    #cone(if condition,then, else)
+
+                    reclassMaskRaster = Con(reclassMaskRaster == unknown_value2, 0,reclassMaskRaster)  # all areas that are manually labeled as 'unnown' should get value 0
                     reclassMaskRaster.save(reclassFile)#save to new raster file
                     # arcpy.management.CopyRaster(reclassFile, bit_reclassFile, pixel_type = "1_BIT")
                     mask_count = mask_count+1
@@ -131,7 +132,8 @@ class CreateMasks:
                     rawMaskRaster = arcpy.Raster(outputFile)    # Resultatet af konverteringen åbnes
                     emptyRaster = IsNull(rawMaskRaster)         # Udvælg tomme pixels
                     reclassMaskRaster = Con(emptyRaster, 0, rawMaskRaster, "VALUE > 0") # Omkoder tomme pixels til værdien 0 (nul)
-                    reclassMaskRaster = Con([reclassMaskRaster] == unknown_value2, 0 , [reclassMaskRaster]) #all areas that are manually labeled as 'unnown' should get value 0
+
+                    reclassMaskRaster = Con(reclassMaskRaster == unknown_value2, 0, reclassMaskRaster)  # all areas that are manually labeled as 'unnown' should get value 0
                     reclassMaskRaster.save(reclassFile)                                 # Gem filen med omkodningen i undermappe "/reclass"
                     mask_count = mask_count+1
                     emptyImages.append(basename)
@@ -212,6 +214,7 @@ def main(config):
     priority_field= ini_parser[section]['priority_field']
     includeEmptyFiles= ini_parser[section]['includeEmptyFiles']
     outputCellSize= float(ini_parser[section]['outputCellSize'])
+    unknown_value2 = int(ini_parser[section]['unknown_value2'])
     create_masks_obj= CreateMasks()
 
 
@@ -228,7 +231,7 @@ def main(config):
 
         #mask_path = str(pathlib.Path(raw_mask_folder))
         create_masks_obj.CreateMaskFile(source_path=im_path, raw_mask_folder= raw_mask_folder,mask_folder=mask_folder, feature_workspace=arcpy_workspace, mask_featureclass=mask_featureclass,
-                                        category_field=category_field, priority_field=priority_field, includeEmptyFiles=includeEmptyFiles, outputCellSize=outputCellSize,load_extnet_from_PIL=False)
+                                        category_field=category_field, priority_field=priority_field, includeEmptyFiles=includeEmptyFiles, outputCellSize=outputCellSize,load_extnet_from_PIL=False,unknown_value2=unknown_value2)
 
 
 
