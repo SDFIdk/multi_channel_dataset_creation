@@ -1,5 +1,6 @@
 import create_patches
 import create_label_images
+import create_house_images
 import create_txt_files
 import delete_images_with_only_zeroes
 import create_patches
@@ -17,6 +18,14 @@ def main(args):
         #convert the GIS database to label images of same shape as the 'lod-images'
         #if there are no label data for the area covered by the image, we don create any label
         create_label_images.main(config=args.config)
+
+    if not "create_houses" in args.skip:
+        print("create_houses")
+        #convert the GIS database to images of same shape as the 'lod-images'
+        #if there are no house polygons for the area covered by the image, we still create black images
+        create_house_images.main(config=args.config)
+
+
     if not "create_patches" in args.skip:
         print("create_patches")
         #split the data and label-images up into smaler pathces e.g 1000x1000
