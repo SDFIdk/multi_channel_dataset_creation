@@ -1,5 +1,6 @@
 import os
 import pathlib
+import numpy as np
 from osgeo import gdal
 large_file_name = "PROBS_O2021_84_40_1_0037_00084319"
 
@@ -42,14 +43,27 @@ def combine_patches(patches,large_image_name,output_file_path = r"C:\Users\B1523
 
     output_file_path= str(pathlib.Path(output_file_path)/ (  large_image_name + ".tif"))
     #input(output_file_path)
-    merge_argument = " ".join(patches)
 
-    gdal_merge_process = "python "+gdal_merge_path +' -o '+'"'+output_file_path +'"'+" "+' -init 0 -ot float32 ' +merge_argument
-    print(gdal_merge_process)
-    print("merging :"+str(len(patches))+ " nr of patches to "+output_file_path)
-    # Call process.
-    os.system(gdal_merge_process)
-    print("done")
+    #divide the patches up unto batches (gdal_merge can not handle to many images)
+    number_of_batches = int(len(patches)/10)
+    batches = [list(batch) for batch in np.array_split(patches,number_of_batches)]
+    #merge each batch
+    print("dividing the pathces into :"+str(len(batches))+ " nr of batches")
+
+    for id_batch, batch in enumerate(batches):
+
+        if id_batch!=0:
+            #if we allready have merged some of the files we merge the rest of the files with the output of that operation
+            batch.append(output_file_path)
+
+        merge_argument = " ".join(batch)
+
+        gdal_merge_process = "python "+gdal_merge_path +' -o '+'"'+output_file_path +'"'+" "+' -init 0 -ot float32 ' +merge_argument
+        print(gdal_merge_process)
+        print("merging :"+str(len(patches))+ " nr of patches to "+output_file_path)
+        # Call process.
+        os.system(gdal_merge_process)
+    print("done combining pathces")
 
     return output_file_path
 
