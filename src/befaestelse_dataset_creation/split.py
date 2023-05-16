@@ -30,7 +30,7 @@ class Split():
                            cutdatatype, srs, nodata)
 
 
-    def splitdst(self, in_path, out_path, tile_size_x, tile_size_y,cutdatatype,kun_ok_pic=False,ignore_id=0,stop_on_error=True):
+    def splitdst(self, in_path, out_path, tile_size_x, tile_size_y,cutdatatype,kun_ok_pic=False,ignore_id=0,stop_on_error=True,overlap=0):
         filelist = self.getfiles(in_path)
         filelist.sort()
         failed_files = []
@@ -38,18 +38,18 @@ class Split():
             print("working on image nr: "+str(index) + " out of : "+str(len(filelist)))
 
             if stop_on_error:
-                self.splitfile(in_path, out_path, filename, tile_size_x, tile_size_y,cutdatatype,kun_ok_pic=kun_ok_pic,nodata=ignore_id)
+                self.splitfile(in_path, out_path, filename, tile_size_x, tile_size_y,cutdatatype,kun_ok_pic=kun_ok_pic,nodata=ignore_id,overlap=overlap)
             else:
                 try:
                     self.splitfile(in_path, out_path, filename, tile_size_x, tile_size_y, cutdatatype,
-                                   kun_ok_pic=kun_ok_pic, nodata=ignore_id)
+                                   kun_ok_pic=kun_ok_pic, nodata=ignore_id,overlap=overlap)
                 except:
                     failed_files.append(in_path)
         return failed_files
 
 
 
-    def splitfile(self, in_path, out_path, filename, tile_size_x, tile_size_y,cutdatatype, kun_ok_pic=False, centrer_opklip=False,srs="EPSG:25832", nodata=255):
+    def splitfile(self, in_path, out_path, filename, tile_size_x, tile_size_y,cutdatatype, kun_ok_pic=False, centrer_opklip=False,srs="EPSG:25832", nodata=255,overlap =0):
         """
         @ arg kun_ok_pic: Hvis True undgå masker/pic,  der ikke bliver fuld dækket af det oprindelige billede.
         @ arg centrer_opklip: Hvis True center opklippene om omkring midten af det oprindelige billede/mask.
@@ -130,8 +130,9 @@ class Split():
                 return
             print("Extra gdal options (cutdatatype={}): \n{}".format(cutdatatype, gdal_opt))
 
-            for i in range(0 + xdelta, xstop, tile_size_x):
-                for j in range(0 + ydelta, ystop, tile_size_y):
+            #in order to get overlap between the images we only step with tile_size -overlap
+            for i in range(0 + xdelta, xstop, (tile_size_x-overlap)):
+                for j in range(0 + ydelta, ystop, (tile_size_y-overlap)):
                     #com_string = "gdal_translate -srcwin " + str(i) + ", " + str(j) + ", " + str(
                     #    tile_size_x) + ", " + str(tile_size_y) + " " + str(inputfilepath) + " " + str(
                     #    out_path) + basename + "_" + str(i) + "_" + str(j) + extension
@@ -255,7 +256,7 @@ if __name__ == "__main__":
 
     splitf = Split()
 
-    splitf.splitdst(in_path=args.input_folder, out_path=args.output_folder, tile_size_x=int(args.tile_size_x), tile_size_y=int(args.tile_size_x),kun_ok_pic=args.kun_ok_pic)
+    splitf.splitdst(in_path=args.input_folder, out_path=args.output_folder, tile_size_x=int(args.tile_size_x), tile_size_y=int(args.tile_size_x),kun_ok_pic=args.kun_ok_pic,overlap=args.overlap)
 
 # Null values are converted to 0 for files in file filelist
 """

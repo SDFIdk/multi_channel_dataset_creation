@@ -88,14 +88,21 @@ def _OBSELETE_create_all_txt_with_images_with_least_background(folder_path,datat
 def verify_all_files_exists(file_name,folder_path,other_data_folders =[]):
     all_files_exists = True
 
+<<<<<<< HEAD
     for data_folder in  other_data_folders:
         if not (pathlib.Path(data_folder)/file_name).is_file():
             print("missing file :"+str(pathlib.Path(data_folder)/file_name))
+=======
+    for other_data_folder in  other_data_folders:
+        if not (other_data_folder/file_name).is_file():
+            #(pathlib.Path(folder_path).parent/pathlib.Path(data_folder)/file_name).is_file():
+>>>>>>> 1537e95b5b056ff10ea0720f2580f93513c3f4cb
             all_files_exists = False
+            print("this file does not exist:"+str((other_data_folder/file_name)))
     #if no other data folders are used its enough that the initial file exists
     if not (pathlib.Path(folder_path)/file_name).is_file():
         all_files_exists = False
-    print("all_files_exists:"+str(all_files_exists))
+    #print("all_files_exists:"+str(all_files_exists))
 
     return all_files_exists
 
@@ -119,9 +126,11 @@ def create_all_txt(folder_path,datatype,all_txt_filename,other_data_folders=[]):
     print(folder_path)
     files_in_folder =os.listdir(folder_path)
     print(files_in_folder)
-    
+
+
     
     files= [x for x in files_in_folder if datatype in x and ".xml" not in x and verify_all_files_exists(x,folder_path,other_data_folders)]
+
     
 
     print("number of image files in all: " + str(len(files)))
