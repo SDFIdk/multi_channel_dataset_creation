@@ -5,19 +5,27 @@ currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentfram
 
 sys.path.insert(0, currentdir)
 
-
+arcpy_installed= False
 try:
-    import create_label_images
+    import arcpy
+    arcpy_installed = True
 except:
-    print("failed to import 'create_label_images' are you missing arcpy ?")
+    print("NO ARCPY INSTALLED! , This is OK if you dont want to create rasters from polyogns (e.g labels or houses)")
+
+
+if arcpy_installed:
+    import create_label_images
+    import create_house_images
+    import update_arcgis_feature_class
+else:
+    print("with no arcpy installed the program can not crate raster data (e.g labels or houses) from polygons")
 
 import create_patches
-import create_house_images
 import create_txt_files
 import delete_images_with_only_zeroes
 import move_data_to_separate_folders
 import argparse
-import update_arcgis_feature_class
+
 
 
 def main(args):
