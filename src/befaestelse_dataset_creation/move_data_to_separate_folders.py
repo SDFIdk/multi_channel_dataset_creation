@@ -16,7 +16,8 @@ def main(config):
         #set the variables that rename_files.main() need
 
         inputfolder = pathlib.Path(ini_parser[section]["folder_containing_all_image_types"])
-        outputfolder = inputfolder.parent / (datatype)
+        data_folder = pathlib.Path(ini_parser[section]["data_folder"])
+        outputfolder = data_folder / (datatype)
         replacestring = "_"+datatype+ ".tif"
         newstring = ".tif"
         only_consider_files_with_matching_names = True

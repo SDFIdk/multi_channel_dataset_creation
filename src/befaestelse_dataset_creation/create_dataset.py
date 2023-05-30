@@ -25,10 +25,12 @@ import create_txt_files
 import delete_images_with_only_zeroes
 import move_data_to_separate_folders
 import argparse
+import time
 
 
 
 def main(args):
+    create_dataset_start_time = time.time()
     if not "move_data_to_separate_folders" in args.skip:
         print("move_data_to_separate_folders")
         #going from folder/a_name_DSM.tif , folder/a_name_OrtoCIR.tif ... to  DSM/a_name.tif , OrtoCIR/a_name.tif ..
@@ -62,6 +64,9 @@ def main(args):
         print("create_text_files")
         #divide the dataset into trainingset and validationset and save the split as all.txt, train.txt and valid.txt
         create_txt_files.main(config=args.config)
+
+    create_dataset_end_time = time.time()
+    print("create_dataset took: "+str(create_dataset_end_time-create_dataset_start_time ))
  
 
 

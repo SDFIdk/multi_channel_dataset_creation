@@ -140,6 +140,18 @@ class Split():
                     # os.system(com_string)
                     outputfilename = basename + "_" + str(i) + "_" + str(j) + extension
                     outputfilepath = os.path.join(out_path, outputfilename)
+
+                    #When the crop goes outside of the image we move it to fit inside (this way we avoid classifying pixels outside of image)
+                    adjusted_i = min(i,(xstop-(tile_size_x-overlap)))
+                    if adjusted_i != i:
+                        print("adjusted i from :"+str(i )+ " to :"+str(adjusted_i))
+                    i= adjusted_i
+                    adjusted_j = min(j,(ystop-(tile_size_y-overlap)))
+                    if adjusted_j != j:
+                        print("adjusted j from :"+str(j )+ " to :"+str(adjusted_j))
+                    j= adjusted_j
+
+
                     # outfile = str(out_path) + basename + "_" + str(i) + "_" + str(j) + extension
                     options = "-srcwin " + str(i) + ", " + str(j) + ", " + str(tile_size_x) + ", " + str(tile_size_y) +  \
                         gdal_opt

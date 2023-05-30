@@ -35,16 +35,18 @@ def create_all_txt(folder_path,datatype,all_txt_filename,other_data_folders=[]):
     Create all.txt file with all image files included in the folder_path
 
     """
+    #make sure the folder we want to save the txt file in exists
+    pathlib.Path(all_txt_filename).parent.mkdir(parents=True, exist_ok=True)
 
-    input("verify")
-    input(other_data_folders)
+
+
  
     #folder_path=folder_path.replace("//","/")
     folder_path = pathlib.Path(folder_path)
 
-    print(folder_path)
+
     files_in_folder =os.listdir(folder_path)
-    print(files_in_folder)
+
 
 
     

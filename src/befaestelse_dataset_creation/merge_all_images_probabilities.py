@@ -48,14 +48,18 @@ def merge_channels(images,output_file_path,gdal_path= "None"):
 
 def combine_patches(patches,output_file_path = r"C:\Users\B152325\Desktop\befæstelse_status_2023\\",gdal_path = "None",use_gdalbuildvrt = True):
     """
-    crate a mosaik by combining all pathces to a single image
+    create a mosaik by combining all pathces to a single image
     process is faster with
     use_gdalbuildvrt = True
     """
     start_time = time.time()
+    pathlib.Path(output_file_path).parent.mkdir(parents=True, exist_ok=True)
 
     #we use a vrt file as a temporary step before turning it into a geotiff
-    output_file_path_buldvrt = "tmp2.vrt"
+    output_file_path_buldvrt =str(pathlib.Path(output_file_path).parent /"tmp.vrt")
+    #if it allready exists, remove it
+    pathlib.Path(output_file_path_buldvrt).unlink(missing_ok=True)
+
 
     gdalbuildvrt = "gdalbuildvrt "
     gdal_merge_path = '"'+gdal_path +'gdal_merge.py"'  #r'"C:/Program Files/QGIS 3.22.4/apps/Python39/Scripts/gdal_merge.py"'
@@ -67,7 +71,7 @@ def combine_patches(patches,output_file_path = r"C:\Users\B152325\Desktop\befæs
     #gdal_merge_path = '"'+gdal_path +'gdal_merge.py"'  #r'"C:/Program Files/QGIS 3.22.4/apps/Python39/Scripts/gdal_merge.py"'
 
 
-    pathlib.Path(output_file_path).parent.mkdir(parents=True, exist_ok=True)
+
     #input("crated folder?")
 
 
@@ -127,6 +131,11 @@ def combine_patches(patches,output_file_path = r"C:\Users\B152325\Desktop\befæs
         vrt_to_tif_end_time = time.time()
         print("##Done ###")
         print("vrt_to_tif took:"+str(vrt_to_tif_end_time-vrt_to_tif_start_time))
+
+
+
+    #clean up
+    pathlib.Path(output_file_path_buldvrt).unlink(missing_ok=True)
 
 
 
@@ -302,14 +311,87 @@ def create_multichannel_image(channel_images=None,output_folder=r"C:\Users\B1523
 
 
 
+def crop_to_same_shape(image_folder=r"C:\Users\b199819\Desktop\process_block_output\mosaik_1km1_1",shape_file_path= r"T:\trainingdata\befastelse\1km2\6175_724.shp",output_folder = r"C:\Users\b199819\Desktop\process_block_output\croped_1km2_mosaiks_3"):
+    crop_start= time.time()
+    image_paths = [pathlib.Path(image_folder)/im_name for im_name in os.listdir(image_folder)]
+
+
+    #output_folder = r"T:\trainingdata\befastelse\1km2\croped_mosaiks"
+
+
+    pathlib.Path(output_folder).mkdir(parents=True, exist_ok=True)
+    for im in image_paths:
+        #crop to shapefile
+        output_path = str(pathlib.Path(output_folder)/im.name)
+        # Call process.
+        call= "gdalwarp -cutline "+shape_file_path+" -crop_to_cutline "+str(im)+" "+output_path
+        os.system(call)
+        #gdalwarp -cutline C:\Users\B152325\Desktop\croping_window\output.shp -crop_to_cutline "C:\Users\B152325\Desktop\1km2\PROBS_O2021_84_40_1_0045_00093316_0_5760.tif" C:\Users\B152325\Desktop\croping_window\output.tif
+
+    #arr= np.array(images)
+    #save to disk as geotif with rasterio
+    #arr= np.sum(arr,axis=0)
+    #predictions = np.argmax(arr,axis=0)
+    #save to disk as geotif with rasterio
+    crop_end= time.time()
+
+    print("cropping took :"+str(crop_end-crop_start))
+
+def merge_with_numpy(image_folder=r"C:\Users\b199819\Desktop\process_block_output\croped_1km2_mosaiks_3"):
+    import time
+
+    merge_with_numpy_start = time.time()
+    summed = np.zeros([11,10000,10000])
+    import rasterio
+    output_folder = r"C:\Users\b199819\Desktop\process_block_output\numpy_merged_3"
+    pathlib.Path(output_folder).mkdir(parents=True, exist_ok=True)
+    image_paths = [pathlib.Path(image_folder)/im_name for im_name in os.listdir(image_folder)]
+    print("merging "+str(len(image_paths))+ " files with numpy")
+
+    for im in image_paths:
+        print("opening image : "+str(im))
+        #append the numpy array version of the data
+        try:
+            summed = summed +rasterio.open(im).read()
+
+        except:
+            print("failed to read :"+str(im))
+
+
+    print("writing summed data to: "+str(output_folder+"\\summed.tif"))
+
+    rgb = np.transpose(summed[0:3],(1,2,0))
+
+    max=rgb.max()
+    min=rgb.min()
+    from PIL import Image
+
+    as_numpy = np.array(((rgb-min)/(max-min))*255,dtype=np.uint8)
+    print(as_numpy.shape)
+    print(as_numpy)
+
+    Image.fromarray(as_numpy).save(output_folder+"\\RGBsummed.tif")
+    Image.fromarray(summed.argmax(axis=0).astype(np.uint8)).save(output_folder+"\\predictions.tif")
+    merge_with_numpy_end = time.time()
+
+    print("merge_with_numpy took "+str(merge_with_numpy_end - merge_with_numpy_start))
+
+    #with rasterio.open(output_folder+"\\summed.tif", "w") as dest:
+    #    dest.write(summed)
+
+
+
+
+
 def main(args):
+    main_start_time = time.time()
 
 
 
-    if args.Debug:
-        print("merging the proibabiliteis of a few small handselected images")
-        add_probabilities([r"T:\logs_and_models\befastelse\orthoimages_iteration_31_linux\models\1km2\PROBS_O2021_84_40_1_0045_00093310_7000_0.tif",r"T:\logs_and_models\befastelse\orthoimages_iteration_31_linux\models\1km2\PROBS_O2021_84_40_1_0045_00093310_7000_2000.tif"],output_name= "c_name",gdal_path = args.Gdal_path,output_folder = args.Output_merged_preds_folder)
-        input("the probabilities have now been added!")
+    #if args.Debug:
+    #    #print("merging the proibabiliteis of a few small handselected images")
+    #    #add_probabilities([r"T:\logs_and_models\befastelse\orthoimages_iteration_31_linux\models\1km2\PROBS_O2021_84_40_1_0045_00093310_7000_0.tif",r"T:\logs_and_models\befastelse\orthoimages_iteration_31_linux\models\1km2\PROBS_O2021_84_40_1_0045_00093310_7000_2000.tif"],output_name= "c_name",gdal_path = args.Gdal_path,output_folder = args.Output_merged_preds_folder)
+    #    #input("the probabilities have now been added!")
 
     #lots of 1000x1000 croped probabilities-images are located in a folder
     #input_folder =r"T:\logs_and_models\befastelse\orthoimages_iteration_31\models\befaestelse_dataset_creation_test_2"
@@ -319,13 +401,21 @@ def main(args):
     small_images_for_each_large_image = get_patches_per_large_image(args.Input_preds)
     large_images=[]
     for large_image in small_images_for_each_large_image:
-
-
         output_file_path= str(pathlib.Path(args.Mosaicked_preds_folder)/  large_image )
         if not args.Skip_combine_patches_to_mosaik:
             combine_patches(patches= small_images_for_each_large_image[large_image],output_file_path=output_file_path,gdal_path = args.Gdal_path)
             print("done merging patches to :"+output_file_path)
         large_images.append(output_file_path)
+
+
+    #crop the probability-images to fit the 1km2 tile
+    crop_to_same_shape(image_folder=args.Mosaicked_preds_folder,shape_file_path=args.Shape_file,output_folder =args.Croped_mosaicked_preds_folder)
+
+    main_finnished_mosaik_time = time.time()
+
+
+    """
+
 
 
     #create a list with names for the images that store the separate channels
@@ -336,6 +426,8 @@ def main(args):
     for band in bands:
         channel_images.append(str(pathlib.Path(args.Output_merged_preds_folder)/ (output_name+"band_"+band+ "_calc_merged_probs" + ".tif")))
 
+
+
     #create the images for holding the probabilities for each class
     if not args.Skip_add_overlapping_probs_to_single_image:
         #merge the resulting overlapping images to a single tiff file
@@ -345,12 +437,28 @@ def main(args):
 
         #then merge the channel images to a single multichannel image
         create_multichannel_image(channel_images=channel_images,output_folder=args.Output_merged_preds_folder,output_name= output_name,gdal_path = args.Gdal_path)
+    main_finnished_multichannel_image_time = time.time()
 
     if not args.Skip_create_pred_image:
-        #also crate a prediction image for the area
+        #also create a prediction image for the area
         crate_predictions(channel_images,output_folder = args.Output_merged_preds_folder,gdal_path = args.Gdal_path)
+        
+        
+    """
+    main_finnished_prediction_image_time = time.time()
+    print("########################DONE##################################################################################################")
+    print("times:")
+    print("totall : "+str(main_finnished_prediction_image_time-main_start_time))
+    print("creating mosaik: "+str(main_finnished_mosaik_time-main_start_time))
+
+    print("##############################################################################################################################")
+
 
 if __name__ == "__main__":
+    #merge_with_numpy()
+    #crop_to_same_shape()
+
+
     example_usage= r"python merge_all_images_probabilities.py -i path\to\folder\with\probs -o folder\to\save\merged\probs\in"
     print("########################EXAMPLE USAGE########################")
     print(example_usage)
@@ -362,13 +470,19 @@ if __name__ == "__main__":
 
     parser.add_argument("-i", "--Input_preds", help="path/to/folder/with/probs  ",required=True)
     parser.add_argument("-m", "--Mosaicked_preds_folder", help="path/to/folder/to/save/mosaicked/probs/in (crops from same images are recomined to a large image)",required=True)
-    parser.add_argument("-o", "--Output_merged_preds_folder", help="path/to/folder/to/save/merged/probs/in",required=True)
+    parser.add_argument("-c", "--Croped_mosaicked_preds_folder", help="path/to/folder/to/save/croped/mosaicked/probs/in (the mosaik are croped to fit the 1km2 tile)",required=True)
+
+    # parser.add_argument("-o", "--Output_merged_preds_folder", help="path/to/folder/to/save/merged/probs/in",required=True)
     parser.add_argument("-g", "--Gdal_path", help="e.g C:/Program Files/QGIS 3.16.8>/apps/Python39/Scripts/",required=False,default =r"C:/Program Files/QGIS 3.16.8/apps/Python39/Scripts/" )
 
     parser.add_argument("--Skip_combine_patches_to_mosaik",required=False, action='store_true',default =False )
     parser.add_argument("--Skip_add_overlapping_probs_to_single_image",required=False, action='store_true',default =False)
     parser.add_argument("--Skip_create_pred_image",required=False, action='store_true',default =False)
     parser.add_argument("--Debug",required=False, action='store_true',default =False)
+
+    parser.add_argument("--Shape_file", help="path/to/file.shp",required=False,default =r"T:\trainingdata\befastelse\1km2\6175_724.shp" )
+
+
 
 
 
