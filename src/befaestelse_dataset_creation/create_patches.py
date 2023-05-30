@@ -31,6 +31,7 @@ def main(config):
         #remove the destination folder and create it anew
         if Path(splitted_mask_folder).exists() and Path(splitted_mask_folder).is_dir():
             shutil.rmtree(Path(splitted_mask_folder))
+        
         Path(splitted_mask_folder).mkdir(parents=True, exist_ok=True)
 
         splitf = split.Split()
