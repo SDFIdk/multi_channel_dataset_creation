@@ -6,7 +6,7 @@ import argparse
 import time
 import rasterio
 from PIL import Image
-
+import shutil
 
 
 def get_patches_per_large_image(input_folder):
@@ -298,8 +298,23 @@ def main(args):
         large_images.append(output_file_path)
 
 
-    #crop the probability-images to fit the 1km2 tile
-    crop_to_same_shape(image_folder=args.Mosaicked_preds_folder,shape_file_path=args.Shape_file,output_folder =args.Croped_mosaicked_preds_folder)
+
+    if args.Shape_file:
+        # crop the probability-images to fit the 1km2 tile
+        crop_to_same_shape(image_folder=args.Mosaicked_preds_folder,shape_file_path=args.Shape_file,output_folder =args.Croped_mosaicked_preds_folder)
+    else:
+        #copy all files to the Croped_mosaicked_preds_folder instead
+        source_folder = Path(args.Mosaicked_preds_folder)
+        destination_folder = Path(args.Croped_mosaicked_preds_folder)
+
+        # Iterate over each file in the source folder
+        for file in source_folder.iterdir():
+            if file.is_file():
+                # Construct the destination path by joining the destination folder path with the file name
+                destination_path = destination_folder / file.name
+
+                # Copy the file to the destination folder
+                shutil.copy2(file, destination_path)
 
     main_finnished_mosaik_time = time.time()
 
@@ -369,7 +384,7 @@ if __name__ == "__main__":
     parser.add_argument("--create_pred_image",required=False, action='store_true',default =False)
     parser.add_argument("--Debug",required=False, action='store_true',default =False)
 
-    parser.add_argument("--Shape_file", help="path/to/file.shp",required=False,default =r"T:\trainingdata\befastelse\1km2\6175_724.shp" )
+    parser.add_argument("--Shape_file", help="path/to/file.shp",required=False,default =None )
 
 
 
