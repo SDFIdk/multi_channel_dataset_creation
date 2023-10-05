@@ -101,7 +101,7 @@ if __name__ == "__main__":
 
     parser.add_argument("--config",help ="path to config.ini file e.g ..\..\configs\template_create_dataset.ini",required=True)
 
-    parser.add_argument("--skip",help ="path to folder containing images to be splitted",nargs ='+',default =[],required=False)
+    parser.add_argument("--skip",help ="steps in the process to be skipped: eg create_houses create_labels ",nargs ='+',default =[],required=False)
 
     args = parser.parse_args()
 
