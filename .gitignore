@@ -1,1 +1,4 @@
-example_dataset/
+example_dataset/*
+example_dataset/*/*
+example_dataset/*/*/*
+*.pyc

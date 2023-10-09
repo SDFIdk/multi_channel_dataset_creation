@@ -1,11 +1,12 @@
 # Creating a dataset for semantic segmentation based on multi-channel images
 Combining images and lidar data from different sources into a single multi-channel image dataset.
-Also handels conversion of labels stored as Arcgis plygon featureclass into label-images. 
+Also handle conversion of labels stored as Arcgis plygon featureclass into geotiff label-images. 
 The finnished dataset is meant to be used for training and inference with http://sdfe-git/ITU/ML/fastai2 or https://github.com/rasmuspjohansson/lightning
 ## Prerequsites are:
 Software
 - Conda-environment from ArcGIS pro installation (at the time of writing this only works on windows OS)
-- You can alternatively create a fresh conda environment but the software will then not be able to create labels. It can howeverstill preprocess the data so they are ready for ML-inference. 
+- You can alternatively create a fresh conda environment or use the one that comes with http://sdfe-git/ITU/ML/fastai2 but the software will then not be able to create labels. It can however still preprocess the data so they are ready for ML-inference.
+ 
 
 Data
 - Georeferenced Orthophoto (https://datafordeler.dk/dataoversigt/geodanmark-ortofoto/)
@@ -48,7 +49,7 @@ pip install -e .
 
 ## Usage example
 
-python src/multi_channel_dataset_creation/create_dataset.py --config configs/create_dataset_example_dataset.ini
+python src/multi_channel_dataset_creation/create_dataset.py --dataset_config configs/create_dataset_example_dataset.ini
 For more help on the usage type
 python src/multi_channel_dataset_creation/create_dataset.py -h
 
