@@ -49,7 +49,7 @@ class Split():
 
 
 
-    def splitfile(self, in_path, out_path, filename, tile_size_x, tile_size_y,cutdatatype, kun_ok_pic=False, centrer_opklip=False,srs="EPSG:25832", nodata=255,overlap =0):
+    def splitfile(self, in_path, out_path, filename, tile_size_x, tile_size_y,cutdatatype, kun_ok_pic=False, centrer_opklip=False,srs="EPSG:25832", nodata=255,overlap =0,debug=False):
         """
         @ arg kun_ok_pic: Hvis True undgå masker/pic,  der ikke bliver fuld dækket af det oprindelige billede.
         @ arg centrer_opklip: Hvis True center opklippene om omkring midten af det oprindelige billede/mask.
@@ -67,7 +67,8 @@ class Split():
             band = ds.GetRasterBand(1)
             xsize = band.XSize
             ysize = band.YSize
-            print("Xsize={} Ysize={}".format(xsize, ysize))
+            if debug:
+                print("Xsize={} Ysize={}".format(xsize, ysize))
             """
             for i in range(0, xsize, tile_size_x):
                 for j in range(0, ysize, tile_size_y):
@@ -77,7 +78,8 @@ class Split():
                     #print(com_string)
                     os.system(com_string)
             """
-            print("kun_ok_pic={}  centrer_opklip={}".format(kun_ok_pic, centrer_opklip))
+            if debug:
+                print("kun_ok_pic={}  centrer_opklip={}".format(kun_ok_pic, centrer_opklip))
             # Juster opklipningen så den ligger i centrum af billede
             if centrer_opklip:
                 #TODO: skal testes og prøves af
@@ -96,10 +98,15 @@ class Split():
             # Controlling extra gdal options
             gdal_old_style = ' -a_srs EPSG:25832 -co TILED=YES -co PHOTOMETRIC=RGB -co COMPRESS=LZW '
             gdal_opt = ""
+
+
             if cutdatatype == "photo":
-                # Standart arial photo
+                # Standar arial photo
                 gdal_opt = " -a_srs {} -co TILED=YES -co PHOTOMETRIC=RGB -co COMPRESS=LZW ".format(srs)
-                # print(gdal_old_style)  # move to test assert!
+            elif cutdatatype == "single_channel":
+                # float 32 single channel data (DTM or DSM)
+                gdal_opt = " -a_srs {} -co TILED=YES -co PHOTOMETRIC=MINISBLACK -co COMPRESS=LZW ".format(srs)
+
 
             elif cutdatatype == "mask_NaN":
                 # Standart mask with cut up at edge with missing data(from in photo)
@@ -128,7 +135,8 @@ class Split():
             else:
                 print("Warning: Missing/unknown  par: cutdatatype ")
                 return
-            print("Extra gdal options (cutdatatype={}): \n{}".format(cutdatatype, gdal_opt))
+            if debug:
+                print("Extra gdal options (cutdatatype={}): \n{}".format(cutdatatype, gdal_opt))
 
             #in order to get overlap between the images we only step with tile_size -overlap
             for i in range(0 + xdelta, xstop, (tile_size_x-overlap)):
@@ -159,7 +167,8 @@ class Split():
                     # ' -a_srs EPSG:25832 -co TILED=YES -co PHOTOMETRIC=RGB -co COMPRESS=LZW -a_offset 3 -a_nodata 3 '  # fix nodata problem monochrome mask (old style)
                     ds = gdal.Translate(outputfilepath, inputfilepath, options=options)
                     sub_tiles += 1
-            print("Cut into {} sub tiles".format(sub_tiles))
+            if debug:
+                print("Cut into {} sub tiles".format(sub_tiles))
 
 
     def splitfiles(self, in_path, tile_size_x, tile_size_y, correctpixels = 'False'):
