@@ -13,6 +13,7 @@ def main(config):
     section = "SETTINGS"
     all_txt_filename =ini_parser[section]["all_txt_filename"]
     valid_txt_filename =ini_parser[section]["valid_txt_filename"]
+    remove_overlapping_images = ini_parser[section]["remove_images_from_trainingset_that_overlap_with_validationset"]
     data_path = ini_parser[section]["data_folder"]
     splitted_data_parent_folder =pathlib.Path(ini_parser[section]["splitted_data_parent_folder"])
 
@@ -33,8 +34,11 @@ def main(config):
 
 
     create_all_and_valid_txt.create_all_and_valid(all_txt_filename =all_txt_filename,valid_txt_filename=valid_txt_filename,path_to_training_images=path_to_images,datatype=datatype,nr_of_images_between_validation_samples=nr_of_images_between_validation_samples,other_data_folders=other_data_folders)
-    print("creating train.txt")
-    create_train_txt.create_train_txt(path_to_all_txt=all_txt_filename,path_to_valid_txt=valid_txt_filename,name_prefix="")
+    print("creating train.txt by removing all images in valid.txt from all.txt")
+    print("also remove all images that overlap with the images in the valid.txt")
+    create_train_txt.create_train_txt(path_to_all_txt=all_txt_filename,path_to_valid_txt=valid_txt_filename,path_to_images=path_to_images,remove_overlapping_images=remove_overlapping_images,name_prefix="")
+
+
 
 
 

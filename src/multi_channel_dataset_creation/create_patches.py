@@ -33,7 +33,7 @@ def main(config,skip):
 
     tile_size_y = ini_parser[section]["tile_size_y"]
     tile_size_x = ini_parser[section]["tile_size_x"]
-    overlap= ini_parser[section]["overlap"]
+    overlap = ini_parser[section]["overlap"]
 
     ignore_id = int(ini_parser[section]["ignore_id"])
 

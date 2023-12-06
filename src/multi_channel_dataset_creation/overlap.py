@@ -3,6 +3,7 @@
 
 from osgeo import gdal
 import argparse
+import sys
 
 def geotiff_overlap(file1_path, file2_path):
     try:
@@ -33,7 +34,7 @@ def geotiff_overlap(file1_path, file2_path):
 
     except Exception as e:
         print(f"An error occurred: {str(e)}")
-        return False
+        sys.exit()
 
 
 if __name__ == "__main__":

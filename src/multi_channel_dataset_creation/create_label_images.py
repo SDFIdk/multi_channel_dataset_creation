@@ -141,18 +141,18 @@ class CreateMasks:
                     emptyImages.append(basename)
                 maskfile = reclassFile
 
-        print("Færdig. Antal maskefiler dannet: " + str(mask_count) + " (der bliver ikke lavet maskefiler for billeder uden bygninger).")
+        print("Færdig. Antal maskefiler dannet: " + str(mask_count) )
         self.HandleEmptyImages(emptyImages)
         return maskfile
 
-    # METODE DER HÅNDTERER HVAD DER SKAL SKE MED TOMME MASKEFILER (HVOR DER IKKE ER BYGNINGER I)
+    # METODE DER HÅNDTERER HVAD DER SKAL SKE MED TOMME MASKEFILER (HVOR DER IKKE ER labels I)
     # PARAMETER-BESKRIVELSE
-    # emptyImages - liste over de bileder, der ikke indeholder bygninger.
+    # emptyImages - liste over de bileder, der ikke indeholder labels.
     def HandleEmptyImages(self, emptyImages):
         if (len(emptyImages) == 0):
-            print("Alle billedfiler indeholdt bygninger: ")
+            print("Alle billedfiler indeholdt labels: ")
         else:
-            print("Følgende billedfiler indeholdt ikke bygninger: ")    # Udskriver til skærm
+            print("Følgende billedfiler indeholdt ikke labels: ")    # Udskriver til skærm
             with open('EmptyImages.txt', 'w') as f:                     # Dan textfil der skal indeholde filnavnene
                 for item in emptyImages:                                # loop gennem listen af navne
                     print(item)                                         # print filnavn til output
@@ -160,43 +160,6 @@ class CreateMasks:
 
 
 
-    """
-    # HÅNDTERING AF INPUT-PARAMETRE
-    if len(sys.argv) > 1:
-        print ("Bruger input-parametre")
-        InputWorkImgFolder = sys.argv[1]
-        OutputWorkspace = sys.argv[2]
-        inputworkspace = sys.argv[3]
-        inputbygninger = sys.argv[4]
-        categoryField = sys.argv[5]
-        priorityField = sys.argv[6]
-        includeemptyString = sys.argv[7]
-        if includeemptyString.upper() == "TRUE":
-            print("MEDTAGER BILLEDER UDEN BYGNINGER!!!")
-            includeEmptyFiles = True
-        else:
-            includeEmptyFiles = False
-
-        cellSizeString = sys.argv[8]
-        if cellSizeString == "":
-            inputCellSize = 0.16
-        else:
-            inputCellSize = float(cellSizeString)
-    """
-
-
-"""
-source_path = r'C:\\Users\B028851\Documents\VTI\data\source\2020_84_40_10_0664.tif'
-destination_path = r'F:\TEMP\PEMAC\Vector2Image\dest'
-feature_workspace = r'C:\\Users\B028851\Documents\ArcGIS\Projects\VITrans\dagi_ma_bygning.gdb'
-mask_featureclass = 'dagi_px_bygninger_i_ramme'
-category_field = 'ML_CAT'
-priority_field = 'ML_PRIORITY'
-includeEmptyFiles = 'TRUE'
-outputCellSize = 0.10
-cm = CreateMasks(source_path, destination_path, feature_workspace, mask_featureclass, category_field, priority_field, includeEmptyFiles, outputCellSize)
-cm.CreateMaskFile()
-"""
 def main(config):
     ini_parser = configparser.ConfigParser()
     ini_parser.read(config)
