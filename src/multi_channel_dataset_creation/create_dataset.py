@@ -21,7 +21,7 @@ if arcpy_installed:
     import create_house_images
     import update_arcgis_feature_class
 else:
-    print("with no arcpy installed the program can not crate raster data (e.g labels or houses) from polygons")
+    print("with no arcpy installed the program can not create raster data (e.g labels or houses) from polygons")
 
 import create_patches
 import create_txt_files
@@ -38,28 +38,28 @@ def main(args):
         print("move_data_to_separate_folders")
         print("#######################################")
         #going from folder/a_name_DSM.tif , folder/a_name_OrtoCIR.tif ... to  DSM/a_name.tif , OrtoCIR/a_name.tif ..
-        move_data_to_separate_folders.main(config=args.config)
-    if not "update_arcgis_feature_class" in args.skip:
+        move_data_to_separate_folders.main(config=args.dataset_config)
+    if (not "update_arcgis_feature_class" in args.skip) and arcpy_installed:
         print("#######################################")
         print("update the 'merged_labels' feature class to include the newest data")
         print("#######################################")
-        update_arcgis_feature_class.main(config=args.config)
+        update_arcgis_feature_class.main(config=args.dataset_config)
 
-    if not "create_labels" in args.skip:
+    if (not "create_labels" in args.skip) and arcpy_installed:
         print("#######################################")
         print("create_labels")
         print("#######################################")
         #convert the GIS database to label images of same shape as the 'lod-images'
         #if there are no label data for the area covered by the image, we don create any label
-        create_label_images.main(config=args.config)
+        create_label_images.main(config=args.dataset_config)
 
-    if not "create_houses" in args.skip:
+    if (not "create_houses" in args.skip) and arcpy_installed:
         print("#######################################")
         print("create_houses")
         print("#######################################")
         #convert the GIS database to images of same shape as the 'lod-images'
         #if there are no house polygons for the area covered by the image, we still create black images
-        create_house_images.main(config=args.config)
+        create_house_images.main(config=args.dataset_config)
 
 
     if not "create_patches" in args.skip:
@@ -67,19 +67,19 @@ def main(args):
         print("create_patches")
         print("#######################################")
         #split the data and label-images up into smaler pathces e.g 1000x1000
-        create_patches.main(config=args.config,skip = args.skip)
-    if not "remove_empty_label_images" in args.skip:
+        create_patches.main(config=args.dataset_config,skip = args.skip)
+    if (not "remove_empty_label_images" in args.skip) and arcpy_installed:
         print("#######################################")
         print("remove_empty_label_images")
         print("#######################################")
         #remove all images without valid labels (label image must exist AND ,must contain pixels with labels !=0)
-        delete_images_with_only_zeroes.main(config=args.config)
+        delete_images_with_only_zeroes.main(config=args.dataset_config)
     if not "create_text_files" in args.skip:
         print("#######################################")
         print("create_text_files")
         print("#######################################")
         #divide the dataset into trainingset and validationset and save the split as all.txt, train.txt and valid.txt
-        create_txt_files.main(config=args.config)
+        create_txt_files.main(config=args.dataset_config)
 
     create_dataset_end_time = time.time()
     print("################################################################################")
@@ -92,13 +92,13 @@ def main(args):
 
 
 if __name__ == "__main__":
-    usage_example= "python create_dataset.py --config --skip move_data_to_separate_folders update_arcgis_feature_class create_labels create_houses create_patches split_labels remove_empty_label_images create_text_files"
+    usage_example= "python src\multi_channel_dataset_creation\create_dataset.py --dataset_config configs\create_dataset_example_dataset.ini --skip move_data_to_separate_folders update_arcgis_feature_class create_labels create_houses create_patches split_labels remove_empty_label_images create_text_files"
     # Initialize parser
     parser = argparse.ArgumentParser(
         epilog=usage_example,
         formatter_class=argparse.RawDescriptionHelpFormatter)
 
-    parser.add_argument("--config",help ="path to config.ini file e.g ..\..\configs\template_create_dataset.ini",required=True)
+    parser.add_argument("--dataset_config",help ="path to config.ini file e.g ..\..\configs\template_create_dataset.ini",required=True)
     #create_dataset.py creates house mask besides the label masks. This is however not strictly nececeary and in order to avoiding adding an extra .gdb file to the repository we skip creation of house masks
     parser.add_argument("--skip",help ="steps in the process to be skipped: eg create_houses create_labels ",nargs ='+',default =["create_houses"],required=False)
 

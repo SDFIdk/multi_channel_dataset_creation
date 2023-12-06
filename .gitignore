@@ -1,1 +1,9 @@
-example_dataset/
+example_dataset/*
+example_dataset/*/*
+example_dataset/*/*/*
+*.pyc
+*.gdbtable
+*.freelist
+*.gdbtablx
+*.atx
+timestamps
