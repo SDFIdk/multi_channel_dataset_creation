@@ -42,6 +42,7 @@ Install the library in 'editable' mode. Editable mode makes sure that a change i
 pip install -e .
 
 
+
 ## Usage example
 
 python src/multi_channel_dataset_creation/create_dataset.py --config configs/create_dataset_example_dataset.ini
