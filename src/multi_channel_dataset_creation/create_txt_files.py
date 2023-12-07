@@ -12,7 +12,7 @@ def main(config):
     ini_parser.read(config)
     section = "SETTINGS"
     all_txt_filename =ini_parser[section]["all_txt_filename"]
-    valid_txt_filename =ini_parser[section]["valid_txt_filename"]
+    valid_txt_filename =(ini_parser[section]["valid_txt_filename"]=="True")
     remove_overlapping_images = ini_parser[section]["remove_images_from_trainingset_that_overlap_with_validationset"]
     data_path = ini_parser[section]["data_folder"]
     splitted_data_parent_folder =pathlib.Path(ini_parser[section]["splitted_data_parent_folder"])
