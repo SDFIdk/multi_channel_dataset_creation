@@ -106,4 +106,4 @@ if __name__ == "__main__":
         train_trefix =""
 
 
-    create_train_txt(path_to_all_txt=args.Alltxtfile,path_to_valid_txt=args.Validtxtfile,path_to_images= args.path_to_images,remove_overlapping_images=args.remove_overlapping,name_prefix=train_trefix)
+    create_train_txt(path_to_all_txt=args.Alltxtfile,path_to_valid_txt=args.Validtxtfile,path_to_images= args.path_to_images,remove_overlapping_images=(args.remove_overlapping=="True"),name_prefix=train_trefix)
