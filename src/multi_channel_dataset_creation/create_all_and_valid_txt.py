@@ -65,7 +65,7 @@ def create_all_txt(folder_path,datatype,all_txt_filename,other_data_folders=[]):
     files= images_that_have_all_datasources
 
     print("files in folder that also exists in "+str(other_data_folders)+" :" + str(len(files)))
-    print("removed "+str(files_in_folder-len(files)) +" nr of files")
+    print("removed "+str(images_to_check-len(files)) +" nr of files")
 
 
     
