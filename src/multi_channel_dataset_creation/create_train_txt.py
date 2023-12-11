@@ -18,7 +18,7 @@ def print_overwrite(text):
     sys.stdout.write('\r' + padded_text)
     sys.stdout.flush()
 
-def create_train_txt(path_to_all_txt,path_to_valid_txt,path_to_images,remove_overlapping_images=False,name_prefix="" ):
+def create_train_txt(path_to_all_txt,path_to_valid_txt,path_to_all_images,path_to_valid_images,remove_overlapping_images=False,name_prefix="" ):
     """
     create a train.txt file based on all.txt and valid.txt
     files presetn in valid.txt should not be present in train.txt
@@ -55,7 +55,7 @@ def create_train_txt(path_to_all_txt,path_to_valid_txt,path_to_images,remove_ove
                 break
             if remove_overlapping_images:
                 # file in all.txt is overlapping with file in valid.txt and should therfore not be present in train.txt
-                if overlap.geotiff_overlap(str(pathlib.Path(path_to_images)/validset_filename), str(pathlib.Path(path_to_images)/filename)):
+                if overlap.geotiff_overlap(str(pathlib.Path(path_to_valid_images)/validset_filename), str(pathlib.Path(path_to_all_images)/filename)):
                     found_overlapping_file= True
                     images_overlapping_with_images_in_validationset.append(filename)
                     break
@@ -90,8 +90,10 @@ if __name__ == "__main__":
     parser.add_argument("-p", "--Prefix", help="prefix for the train.txt file  . e.g  test ->  test_train.txt",
                         required=False)
 
-    parser.add_argument("-i", "--path_to_images",
-                        help="path to teh folder where the images are stored", required=True)
+    parser.add_argument("-i", "--path_to_all_images",
+                        help="path to teh folder where the all.txt images are stored", required=True)
+    parser.add_argument("-j", "--path_to_valid_images",
+                        help="path to teh folder where the valid.txt images are stored", required=True)
     parser.add_argument('--remove_overlapping', action='store_true', default=False)
 
 
@@ -106,4 +108,5 @@ if __name__ == "__main__":
         train_trefix =""
 
 
-    create_train_txt(path_to_all_txt=args.Alltxtfile,path_to_valid_txt=args.Validtxtfile,path_to_images= args.path_to_images,remove_overlapping_images=args.remove_overlapping,name_prefix=train_trefix)
+    
+    create_train_txt(path_to_all_txt=args.Alltxtfile,path_to_valid_txt=args.Validtxtfile,path_to_all_images= args.path_to_all_images,path_to_valid_images= args.path_to_valid_images,remove_overlapping_images=args.remove_overlapping,name_prefix=train_trefix)

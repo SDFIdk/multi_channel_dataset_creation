@@ -27,10 +27,46 @@ def verify_all_files_exists(file_name,folder_path,other_data_folders =[]):
 
 
 
+def remove_files_with_missing_labels_or_datasources(files_in_folder,other_data_folders,label_folder):
+    images_that_have_all_datasources = []
+    # keep track of how many images where missing label or were missing a datatype
+    nr_of_images_missing_data = {label_folder: 0}
+    for datatype_folder in other_data_folders:
+        nr_of_images_missing_data[datatype_folder] = 0
+
+    images_that_where_missing_datasource = []
+
+    images_to_check = len(files_in_folder)
+    images_checked = 0
+
+    for x in files_in_folder:
+        all_files_exists = True
+        if not (pathlib.Path(label_folder) / x).is_file():
+            nr_of_images_missing_data[label_folder] += 1
+            all_files_exists = False
+
+        else:
+
+            for datasource_folder_to_check in other_data_folders:
+                if not (pathlib.Path(label_folder) / x).is_file():
+                    nr_of_images_missing_data[datasource_folder_to_check] += 1
+                    all_files_exists = False
+
+        if all_files_exists:
+            images_that_have_all_datasources.append(x)
+        else:
+            images_that_where_missing_datasource.append(x)
+        images_checked += 1
+        create_train_txt.print_overwrite("checked " + str(images_checked) + " files out of " + str(images_to_check) + ", images_checked/images_to_check : " + str(images_checked / images_to_check))
+    print()
+    print("all files checked for missing label or datasource:")
+    print("nr_of_images_missing_data : "+str(nr_of_images_missing_data))
 
 
+    return images_that_have_all_datasources
 
-def create_all_txt(folder_path,datatype,all_txt_filename,other_data_folders=[]):
+
+def create_all_txt(folder_path,datatype,all_txt_filename,other_data_folders,label_folder):
     """
     Create all.txt file with all image files included in the folder_path
 
@@ -45,30 +81,17 @@ def create_all_txt(folder_path,datatype,all_txt_filename,other_data_folders=[]):
     folder_path = pathlib.Path(folder_path)
 
 
-
-
-
+    #crate a list of iamge files
     files_in_folder =os.listdir(folder_path)
+    files_in_folder = [x for x in files_in_folder if ((datatype in x )and (".xml" not in x ))]
 
     print("files in folder :"+str(len(files_in_folder)))
-    print("removing the files that are missing input data")
-    images_that_have_all_datasources= []
-    images_to_check = len(files_in_folder)
-    images_checked=0
-    for x in files_in_folder:
-        if datatype in x and ".xml" not in x and verify_all_files_exists(x,folder_path,other_data_folders):
-            images_that_have_all_datasources.append(x)
-            images_checked +=1
-            create_train_txt.print_overwrite("checked "+str(images_checked)+ " files out of "+str(images_to_check)+ ", images_checked/images_to_check : "+str(images_checked/images_to_check))
+    print("removing the files that are missing input data or label data")
 
+    files= remove_files_with_missing_labels_or_datasources(files_in_folder,other_data_folders,label_folder)
 
-    files= images_that_have_all_datasources
-
-    print("files in folder that also exists in "+str(other_data_folders)+" :" + str(len(files)))
-    print("removed "+str(images_to_check-len(files)) +" nr of files")
-
-
-    
+    print("files in folder that have labels and  also exists in "+str(other_data_folders)+" :" + str(len(files)))
+    print("removed "+str(len(files_in_folder)-len(files)) +" nr of files")
 
     print("number of image files in all: " + str(len(files)))
     print("first image: "+str(files[0]))
@@ -92,9 +115,9 @@ def create_valid_txt(all_txt_filename,valid_txt_filename,pick_every):
             print("printed the valid filenames to the file : " + valid_txt_filename)
 
 
-def create_all_and_valid(all_txt_filename,valid_txt_filename,path_to_training_images,datatype,nr_of_images_between_validation_samples,other_data_folders=[]):
+def create_all_and_valid(all_txt_filename,valid_txt_filename,path_to_training_images,datatype,nr_of_images_between_validation_samples,other_data_folders,label_folder):
 
-    create_all_txt(folder_path=path_to_training_images,datatype=datatype,all_txt_filename=all_txt_filename,other_data_folders=other_data_folders)
+    create_all_txt(folder_path=path_to_training_images,datatype=datatype,all_txt_filename=all_txt_filename,other_data_folders=other_data_folders,label_folder=label_folder)
     create_valid_txt(all_txt_filename=all_txt_filename,valid_txt_filename=valid_txt_filename,pick_every=nr_of_images_between_validation_samples)
 if __name__ == "__main__":
     usage_example="example usage: \n "+r"python create_all_and_valid_txt.py -f /mnt/trainingdata-disk/trainingdata/RoofTopOrto/path/to/splitted/rgb -a /mnt/trainingdata-disk/trainingdata//RoofTopOrto/esbjergplusplus/all.txt  -v  /mnt/trainingdata-disk/trainingdata//RoofTopOrto/esbjergplusplus/valid.txt -p 17 -d .tif --other_data_folders path/to/splitted/cir path/to/splitted/DSM path/to/splitted/DTM path/to/splitted/OrtoCIR path/to/splitted/OrtoRGB"

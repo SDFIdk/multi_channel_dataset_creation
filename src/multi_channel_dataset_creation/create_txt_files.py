@@ -28,17 +28,16 @@ def main(config):
     print(other_data_folders)
 
 
+
     nr_of_images_between_validation_samples =int(ini_parser[section]["nr_of_images_between_validation_samples"])
     print("creating all.txt and valid.txt based on the files in this folder:")
     print(path_to_images)
 
 
-    create_all_and_valid_txt.create_all_and_valid(all_txt_filename =all_txt_filename,valid_txt_filename=valid_txt_filename,path_to_training_images=path_to_images,datatype=datatype,nr_of_images_between_validation_samples=nr_of_images_between_validation_samples,other_data_folders=other_data_folders)
+    create_all_and_valid_txt.create_all_and_valid(all_txt_filename =all_txt_filename,valid_txt_filename=valid_txt_filename,path_to_training_images=path_to_images,datatype=datatype,nr_of_images_between_validation_samples=nr_of_images_between_validation_samples,other_data_folders=other_data_folders,label_folder = pathlib.Path(ini_parser[section]["splitted_mask_folder"]))
     print("creating train.txt by removing all images in valid.txt from all.txt")
     print("also remove all images that overlap with the images in the valid.txt")
-    create_train_txt.create_train_txt(path_to_all_txt=all_txt_filename,path_to_valid_txt=valid_txt_filename,path_to_images=path_to_images,remove_overlapping_images=remove_overlapping_images,name_prefix="")
-
-
+    create_train_txt.create_train_txt(path_to_all_txt=all_txt_filename,path_to_valid_txt=valid_txt_filename,path_to_all_images=path_to_images,path_to_valid_images=path_to_images,remove_overlapping_images=remove_overlapping_images,name_prefix="")
 
 
 
