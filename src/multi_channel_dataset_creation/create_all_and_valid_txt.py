@@ -5,7 +5,9 @@ import pandas as pd
 import argparse
 import pathlib
 import create_train_txt
-
+import time
+import shutil
+import overlap
 
 
 
@@ -113,12 +115,85 @@ def create_valid_txt(all_txt_filename,valid_txt_filename,pick_every):
 
             print("first elements in valid_list : " + str(valid_list[0]))
             print("printed the valid filenames to the file : " + valid_txt_filename)
+def remove_overlap_from_all_txt(path_to_all_txt,path_to_valid_txt,folder_path):
+    """
+    create a all_without_overlap.txt file based on all_including_overlap.txt.txt and valid.txt
+    files present in valid.txt should also be present in all.txt
+    files(geotifs) in all_including_overlap.txt only partly overlapping with the files(geotifs) in valid.txt ,should not be present in all.txt
+    @returns: all_without_operlap.txt
 
+    1. find all files in all.txt that dont overlap with valid.txt
+    2. combine those files with the files in valid.txt in all_without_overlap.txt
+    """
+
+    create_all_without_overlap_txt_start = time.time()
+
+    #save the old all.txt file in a new name so we can overwrite the old file
+    path_to_all_including_overlap = pathlib.Path(str(path_to_all_txt).replace(".txt","including_overlap.txt"))
+    shutil.copyfile(path_to_all_txt, path_to_all_including_overlap)
+
+    path_to_all_txt = pathlib.Path(path_to_all_txt)
+    path_to_valid_txt = pathlib.Path(path_to_valid_txt)
+
+    train_files = []  # all files not present in valid.txt
+    images_overlapping_with_images_in_validationset = []
+
+    with open(path_to_all_including_overlap, "r") as all_files:
+        all_lines = [line.strip() for line in all_files.readlines()]
+    with open(path_to_valid_txt, "r") as valid_file:
+        valid_lines = [line.strip() for line in valid_file.readlines()]
+
+    # for all files in the dataset (all.txt)
+    nr_of_files = len(all_lines)
+    finnished_file = 0
+    for filename in all_lines:
+        found_file = False
+        found_overlapping_file = False
+        # compare it to each file in valid.txt
+        for validset_filename in valid_lines:
+
+            # file in all.txt is present in valid.txt and should therfore not be present in train.txt
+            if validset_filename in filename:
+                found_file = True
+                break
+
+            # file in all.txt is overlapping with file in valid.txt and should therfore not be present in train.txt
+            if overlap.geotiff_overlap(str(pathlib.Path(folder_path) / validset_filename),
+                                       str(pathlib.Path(folder_path) / filename)):
+                found_overlapping_file = True
+                images_overlapping_with_images_in_validationset.append(filename)
+                break
+
+        if (not found_file) and (not found_overlapping_file):
+            train_files.append(filename)
+
+        finnished_file += 1
+        time_per_image = (time.time() - create_all_without_overlap_txt_start) / finnished_file
+        create_train_txt.print_overwrite("create all_without_overlap.txt processed :" + str(finnished_file) + " out of :" + str(
+            nr_of_files) + " estimated time left : " + str(
+            (time_per_image * (nr_of_files - finnished_file)) / 60) + " minutes")
+
+    print()  # go to a new line since the last print did not do this
+    print("found : " + str(len(
+        images_overlapping_with_images_in_validationset)) + " files that not were present in valid.txt but overlapped with files in valid.txt")
+
+
+    # write the files without overlap with valid.txt and the files in valid.txt to path_to_all_wihout_overlap
+    with open(path_to_all_txt, "w") as no_overlap_file:
+        no_overlap_file.write("\n".join(train_files))
+        no_overlap_file.write("\n")
+        no_overlap_file.write("\n".join(valid_lines))
+
+    print("creating " + str(path_to_all_txt) + " took: " + str(
+        (time.time() - create_all_without_overlap_txt_start) / 60) + ", minutes")
+    return path_to_all_txt
 
 def create_all_and_valid(all_txt_filename,valid_txt_filename,path_to_training_images,datatype,nr_of_images_between_validation_samples,other_data_folders,label_folder):
 
     create_all_txt(folder_path=path_to_training_images,datatype=datatype,all_txt_filename=all_txt_filename,other_data_folders=other_data_folders,label_folder=label_folder)
     create_valid_txt(all_txt_filename=all_txt_filename,valid_txt_filename=valid_txt_filename,pick_every=nr_of_images_between_validation_samples)
+
+    remove_overlap_from_all_txt(path_to_all_txt=all_txt_filename,path_to_valid_txt=valid_txt_filename,folder_path=path_to_training_images)
 if __name__ == "__main__":
     usage_example="example usage: \n "+r"python create_all_and_valid_txt.py -f /mnt/trainingdata-disk/trainingdata/RoofTopOrto/path/to/splitted/rgb -a /mnt/trainingdata-disk/trainingdata//RoofTopOrto/esbjergplusplus/all.txt  -v  /mnt/trainingdata-disk/trainingdata//RoofTopOrto/esbjergplusplus/valid.txt -p 17 -d .tif --other_data_folders path/to/splitted/cir path/to/splitted/DSM path/to/splitted/DTM path/to/splitted/OrtoCIR path/to/splitted/OrtoRGB"
     # Initialize parser

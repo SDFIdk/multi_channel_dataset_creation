@@ -18,11 +18,12 @@ def print_overwrite(text):
     sys.stdout.write('\r' + padded_text)
     sys.stdout.flush()
 
-def create_train_txt(path_to_all_txt,path_to_valid_txt,path_to_all_images,path_to_valid_images,remove_overlapping_images=False,name_prefix="" ):
+def create_train_txt(path_to_all_txt,path_to_valid_txt,path_to_all_images,path_to_valid_images,name_prefix="" ):
+
     """
     create a train.txt file based on all.txt and valid.txt
     files presetn in valid.txt should not be present in train.txt
-    files(geotifs) overlapping with the files(geotifs) in valid.txt ,should not be present in train.txt
+
     @returns: path_to_created_train_txt_file
     """
 
@@ -32,7 +33,7 @@ def create_train_txt(path_to_all_txt,path_to_valid_txt,path_to_all_images,path_t
     path_to_valid_txt = pathlib.Path(path_to_valid_txt)
     path_to_train_txt = path_to_all_txt.parents[0]/ (name_prefix+"train.txt")
     train_files=[] #all files not present in valid.txt
-    images_overlapping_with_images_in_validationset = []
+
 
 
     with open(path_to_all_txt,"r") as all_file:
@@ -45,7 +46,7 @@ def create_train_txt(path_to_all_txt,path_to_valid_txt,path_to_all_images,path_t
     finnished_file = 0
     for filename in all_lines:
         found_file = False
-        found_overlapping_file = False
+
         #compare it to each file in valid.txt
         for validset_filename in valid_lines:
 
@@ -53,14 +54,8 @@ def create_train_txt(path_to_all_txt,path_to_valid_txt,path_to_all_images,path_t
             if validset_filename in filename:
                 found_file = True
                 break
-            if remove_overlapping_images:
-                # file in all.txt is overlapping with file in valid.txt and should therfore not be present in train.txt
-                if overlap.geotiff_overlap(str(pathlib.Path(path_to_valid_images)/validset_filename), str(pathlib.Path(path_to_all_images)/filename)):
-                    found_overlapping_file= True
-                    images_overlapping_with_images_in_validationset.append(filename)
-                    break
 
-        if (not found_file) and (not found_overlapping_file):
+        if (not found_file):
             train_files.append(filename)
 
         finnished_file+=1
@@ -68,10 +63,7 @@ def create_train_txt(path_to_all_txt,path_to_valid_txt,path_to_all_images,path_t
         print_overwrite("create train.txt processed :"+str(finnished_file)+ " out of :"+str(nr_of_files)+ " estimated time left : "+str((time_per_image* (nr_of_files-finnished_file))/60)+ " minutes")
 
     print() #go to a new line since the last print did not do this
-    print("overlaping files:")
-    print(images_overlapping_with_images_in_validationset)
 
-    print("found : "+str(len(images_overlapping_with_images_in_validationset)) +" files that not were present in valid.txt but overlapped with files in valid.txt")
     print("creating train.txt took: "+str((time.time()-create_train_txt_start)/60) + ", minutes")
 
     #write the lines to train.txt
@@ -94,7 +86,7 @@ if __name__ == "__main__":
                         help="path to teh folder where the all.txt images are stored", required=True)
     parser.add_argument("-j", "--path_to_valid_images",
                         help="path to teh folder where the valid.txt images are stored", required=True)
-    parser.add_argument('--remove_overlapping', action='store_true', default=False)
+
 
 
 
@@ -109,4 +101,4 @@ if __name__ == "__main__":
 
 
     
-    create_train_txt(path_to_all_txt=args.Alltxtfile,path_to_valid_txt=args.Validtxtfile,path_to_all_images= args.path_to_all_images,path_to_valid_images= args.path_to_valid_images,remove_overlapping_images=args.remove_overlapping,name_prefix=train_trefix)
+    create_train_txt(path_to_all_txt=args.Alltxtfile,path_to_valid_txt=args.Validtxtfile,path_to_all_images= args.path_to_all_images,path_to_valid_images= args.path_to_valid_images,name_prefix=train_trefix)
