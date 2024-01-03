@@ -29,7 +29,7 @@ def verify_all_files_exists(file_name,folder_path,other_data_folders =[]):
 
 
 
-def remove_files_with_missing_labels_or_datasources(files_in_folder,other_data_folders,label_folder):
+def remove_files_with_missing_labels_or_datasources(files_in_folder,other_data_folders,label_folder,remove_images_without_label):
     images_that_have_all_datasources = []
     # keep track of how many images where missing label or were missing a datatype
     nr_of_images_missing_data = {label_folder: 0}
@@ -43,14 +43,19 @@ def remove_files_with_missing_labels_or_datasources(files_in_folder,other_data_f
 
     for x in files_in_folder:
         all_files_exists = True
-        if not (pathlib.Path(label_folder) / x).is_file():
-            nr_of_images_missing_data[label_folder] += 1
-            all_files_exists = False
+        if remove_images_without_label:
+            if not (pathlib.Path(label_folder) / x).is_file():
+                nr_of_images_missing_data[label_folder] += 1
+                all_files_exists = False
+            elif np.array(Image.open((pathlib.Path(label_folder) / x))).sum() ==0:
+                #if there are only zeros in the label we treat this as if the label is missing
+                nr_of_images_missing_data[label_folder] += 1
+                all_files_exists = False
 
         else:
 
             for datasource_folder_to_check in other_data_folders:
-                if not (pathlib.Path(label_folder) / x).is_file():
+                if not (pathlib.Path(datasource_folder_to_check) / x).is_file():
                     nr_of_images_missing_data[datasource_folder_to_check] += 1
                     all_files_exists = False
 
@@ -68,7 +73,7 @@ def remove_files_with_missing_labels_or_datasources(files_in_folder,other_data_f
     return images_that_have_all_datasources
 
 
-def create_all_txt(folder_path,datatype,all_txt_filename,other_data_folders,label_folder):
+def create_all_txt(folder_path,datatype,all_txt_filename,other_data_folders,label_folder,remove_images_without_label):
     """
     Create all.txt file with all image files included in the folder_path
 
@@ -90,7 +95,7 @@ def create_all_txt(folder_path,datatype,all_txt_filename,other_data_folders,labe
     print("files in folder :"+str(len(files_in_folder)))
     print("removing the files that are missing input data or label data")
 
-    files= remove_files_with_missing_labels_or_datasources(files_in_folder,other_data_folders,label_folder)
+    files= remove_files_with_missing_labels_or_datasources(files_in_folder,other_data_folders,label_folder,remove_images_without_label)
 
     print("files in folder that have labels and  also exists in "+str(other_data_folders)+" :" + str(len(files)))
     print("removed "+str(len(files_in_folder)-len(files)) +" nr of files")
@@ -102,6 +107,7 @@ def create_all_txt(folder_path,datatype,all_txt_filename,other_data_folders,labe
     with open(all_txt_filename, 'w') as f:
         f.write('\n'.join(files))
     print("printed the filenames to the file : " + all_txt_filename)
+
 
 def create_valid_txt(all_txt_filename,valid_txt_filename,pick_every):
     with open(all_txt_filename, 'r') as f:
@@ -115,6 +121,7 @@ def create_valid_txt(all_txt_filename,valid_txt_filename,pick_every):
 
             print("first elements in valid_list : " + str(valid_list[0]))
             print("printed the valid filenames to the file : " + valid_txt_filename)
+
 def remove_overlap_from_all_txt(path_to_all_txt,path_to_valid_txt,folder_path):
     """
     create a all_without_overlap.txt file based on all_including_overlap.txt.txt and valid.txt
@@ -125,6 +132,7 @@ def remove_overlap_from_all_txt(path_to_all_txt,path_to_valid_txt,folder_path):
     1. find all files in all.txt that dont overlap with valid.txt
     2. combine those files with the files in valid.txt in all_without_overlap.txt
     """
+    print("files where only parts of the image overlap with images in valid.txt are removed from all.txt , for a list of all files , look at all_including_overlap.txt ")
 
     create_all_without_overlap_txt_start = time.time()
 
@@ -188,12 +196,17 @@ def remove_overlap_from_all_txt(path_to_all_txt,path_to_valid_txt,folder_path):
         (time.time() - create_all_without_overlap_txt_start) / 60) + ", minutes")
     return path_to_all_txt
 
-def create_all_and_valid(all_txt_filename,valid_txt_filename,path_to_training_images,datatype,nr_of_images_between_validation_samples,other_data_folders,label_folder):
+def create_all_and_valid(all_txt_filename,valid_txt_filename,path_to_training_images,datatype,nr_of_images_between_validation_samples,other_data_folders,label_folder,remove_images_without_label ,remove_overlap,use_fixed_validation_set):
 
-    create_all_txt(folder_path=path_to_training_images,datatype=datatype,all_txt_filename=all_txt_filename,other_data_folders=other_data_folders,label_folder=label_folder)
-    create_valid_txt(all_txt_filename=all_txt_filename,valid_txt_filename=valid_txt_filename,pick_every=nr_of_images_between_validation_samples)
-
-    remove_overlap_from_all_txt(path_to_all_txt=all_txt_filename,path_to_valid_txt=valid_txt_filename,folder_path=path_to_training_images)
+    create_all_txt(folder_path=path_to_training_images,datatype=datatype,all_txt_filename=all_txt_filename,other_data_folders=other_data_folders,label_folder=label_folder,remove_images_without_label=remove_images_without_label)
+    #we use a fixed validation set in order to easier be able to compare results between runs
+    if not use_fixed_validation_set:
+        create_valid_txt(all_txt_filename=all_txt_filename,valid_txt_filename=valid_txt_filename,pick_every=nr_of_images_between_validation_samples)
+    if remove_overlap:
+        print("removing the geotifs in "+str(all_txt_filename)+" that partly overlap with those in :"+str(valid_txt_filename))
+        remove_overlap_from_all_txt(path_to_all_txt=all_txt_filename,path_to_valid_txt=valid_txt_filename,folder_path=path_to_training_images)
+    else:
+        print(str(all_txt_filename)+ " contains all images")
 if __name__ == "__main__":
     usage_example="example usage: \n "+r"python create_all_and_valid_txt.py -f /mnt/trainingdata-disk/trainingdata/RoofTopOrto/path/to/splitted/rgb -a /mnt/trainingdata-disk/trainingdata//RoofTopOrto/esbjergplusplus/all.txt  -v  /mnt/trainingdata-disk/trainingdata//RoofTopOrto/esbjergplusplus/valid.txt -p 17 -d .tif --other_data_folders path/to/splitted/cir path/to/splitted/DSM path/to/splitted/DTM path/to/splitted/OrtoCIR path/to/splitted/OrtoRGB"
     # Initialize parser
@@ -207,6 +220,10 @@ if __name__ == "__main__":
     parser.add_argument("-d", "--Datatype", help=".eg -d .tif",required=True)
     parser.add_argument("-p", "--nr_of_images_between_validation_samples",type = int,default = 17, help=".eg pick every 17 when creating a validation set: -p 17",required=False)
     parser.add_argument("--other_data_folders", help="e.g [T:\trainingdata\befastelse\ten_channels_1\data\splitted\cir T:\trainingdata\befastelse\ten_channels_1\data\splitted\DSM T:\trainingdata\befastelse\ten_channels_1\data\splitted\DTM T:\trainingdata\befastelse\ten_channels_1\data\splitted\OrtoCIR T:\trainingdata\befastelse\ten_channels_1\data\splitted\OrtoRGB]", nargs='+', default=[],required=False)
+    parser.add_argument("--remove_images_without_label", action='store_true',help= "use this if you want to remove images  without labels from the all.txt and valid.txt files")
+    parser.add_argument("--use_fixed_validation_set", action='store_true',
+                        help="use this if you want to use an existing text file as valid.txt instead of creating one dynamically")
+
 
 
 
@@ -215,7 +232,7 @@ if __name__ == "__main__":
     
     args = parser.parse_args()
 
-    create_all_and_valid(all_txt_filename =args.All_filename,valid_txt_filename=args.Valid_filename,path_to_training_images=args.Folder_path,datatype=args.Datatype,nr_of_images_between_validation_samples=args.nr_of_images_between_validation_samples,other_data_folders=[pathlib.Path(folder_path) for folder_path in args.other_data_folders])
+    create_all_and_valid(all_txt_filename =args.All_filename,valid_txt_filename=args.Valid_filename,path_to_training_images=args.Folder_path,datatype=args.Datatype,nr_of_images_between_validation_samples=args.nr_of_images_between_validation_samples,other_data_folders=[pathlib.Path(folder_path) for folder_path in args.other_data_folders],remove_images_without_label=args.remove_images_without_label,use_fixed_validation_set=args.use_fixed_validation_set)
 
 
     #create_all_txt(folder_path=args.Folder_path,datatype=args.Datatype,all_txt_filename=args.All_filename,allowed_blocks=args.Allowed_blocks)
@@ -226,9 +243,6 @@ if __name__ == "__main__":
 
 
     #create_all_txt_with_images_with_least_background(folder_path=args.Folder_path,datatype=args.Datatype,all_filename=args.All_filename,allowed_blocks=args.Allowed_blocks,max_nr_of_images=args.Max_nr_of_images,label_folder_name=args.Labelsfoldername)
-    #if args.Create_valid_txt:
-    #    create_valid_txt(all_txt_filename=args.All_filename + 'limited_all.txt', valid_txt_filename=args.All_filename+"_valid.txt", pick_every=pick_every)
-
 
     """
     path_to_training_images = r'C:\mnt\trainingdata\rooftop_500p\images\\'

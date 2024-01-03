@@ -102,3 +102,4 @@ if __name__ == "__main__":
 
     
     create_train_txt(path_to_all_txt=args.Alltxtfile,path_to_valid_txt=args.Validtxtfile,path_to_all_images= args.path_to_all_images,path_to_valid_images= args.path_to_valid_images,name_prefix=train_trefix)
+    

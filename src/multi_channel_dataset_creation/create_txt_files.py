@@ -31,11 +31,10 @@ def main(config):
 
     nr_of_images_between_validation_samples =int(ini_parser[section]["nr_of_images_between_validation_samples"])
     print("creating all.txt and valid.txt based on the files in this folder:")
-    print("files where only parts of the image overlap with images in valid.txt are removed from all.txt , for a list of all files , look at all_uncluding_overlap.txt ")
     print(path_to_images)
 
 
-    create_all_and_valid_txt.create_all_and_valid(all_txt_filename =all_txt_filename,valid_txt_filename=valid_txt_filename,path_to_training_images=path_to_images,datatype=datatype,nr_of_images_between_validation_samples=nr_of_images_between_validation_samples,other_data_folders=other_data_folders,label_folder = pathlib.Path(ini_parser[section]["splitted_mask_folder"]))
+    create_all_and_valid_txt.create_all_and_valid(all_txt_filename =all_txt_filename,valid_txt_filename=valid_txt_filename,path_to_training_images=path_to_images,datatype=datatype,nr_of_images_between_validation_samples=nr_of_images_between_validation_samples,other_data_folders=other_data_folders,label_folder = pathlib.Path(ini_parser[section]["splitted_mask_folder"]),remove_overlap =(ini_parser[section]["remove_images_from_all_that_overlap_with_validationset"] in ["True","true"]) ,remove_images_without_label =(ini_parser[section]["remove_images_without_label"] in ["True","true"]),use_fixed_validation_set =(ini_parser[section]["use_fixed_validation_set"] in ["True","true"]))
     print("creating train.txt by removing all images in valid.txt from all.txt")
 
     create_train_txt.create_train_txt(path_to_all_txt=all_txt_filename,path_to_valid_txt=valid_txt_filename,path_to_all_images=path_to_images,path_to_valid_images=path_to_images,name_prefix="")

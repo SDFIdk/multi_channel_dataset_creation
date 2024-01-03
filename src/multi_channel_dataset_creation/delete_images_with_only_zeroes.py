@@ -1,6 +1,7 @@
 
+#DEPRICATED CODE ! functioanlity replaced with def remove_files_with_missing_labels_or_datasources() in crate_all_and_valid_txt.py
 
-
+"""
 import os
 import numpy as np
 from PIL import Image
@@ -87,3 +88,4 @@ if __name__ == "__main__":
 
 
 
+"""

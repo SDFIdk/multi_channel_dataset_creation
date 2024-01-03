@@ -11,10 +11,9 @@ try:
     arcpy_installed = True
 except:
     print("#########################################################################################################")
-    print("NO arcpy INSTALLED! , This is OK if you dont want to create rasters from polyogns (e.g label or house masks/rasters), otherwise you should use a conda environment that is based on the one you get with a windows arcpy installation")
+    print("NO arcpy INSTALLED! , This is OK if you dont want to create rasters from polygons (e.g label or house masks/rasters), otherwise you should use a conda environment that is based on the one you get with a windows arcpy installation")
     print("labels must be created on a windows machine")
     print("#########################################################################################################")
-
 
 if arcpy_installed:
     import create_label_images
@@ -25,7 +24,6 @@ else:
 
 import create_patches
 import create_txt_files
-import delete_images_with_only_zeroes
 import move_data_to_separate_folders
 import argparse
 import time
@@ -68,12 +66,7 @@ def main(args):
         print("#######################################")
         #split the data and label-images up into smaler pathces e.g 1000x1000
         create_patches.main(config=args.dataset_config,skip = args.skip)
-    if (not "remove_empty_label_images" in args.skip) and arcpy_installed:
-        print("#######################################")
-        print("remove_empty_label_images")
-        print("#######################################")
-        #remove all images without valid labels (label image must exist AND ,must contain pixels with labels !=0)
-        delete_images_with_only_zeroes.main(config=args.dataset_config)
+
     if not "create_text_files" in args.skip:
         print("#######################################")
         print("create_text_files")
@@ -88,11 +81,8 @@ def main(args):
     print()
     print()
 
- 
-
-
 if __name__ == "__main__":
-    usage_example= "python src\multi_channel_dataset_creation\create_dataset.py --dataset_config configs\create_dataset_example_dataset.ini --skip move_data_to_separate_folders update_arcgis_feature_class create_labels create_houses create_patches split_labels remove_empty_label_images create_text_files"
+    usage_example= "python src\multi_channel_dataset_creation\create_dataset.py --dataset_config configs\create_dataset_example_dataset.ini --skip move_data_to_separate_folders update_arcgis_feature_class create_labels create_houses create_patches split_labels create_text_files"
     # Initialize parser
     parser = argparse.ArgumentParser(
         epilog=usage_example,
@@ -101,7 +91,5 @@ if __name__ == "__main__":
     parser.add_argument("--dataset_config",help ="path to config.ini file e.g ..\..\configs\template_create_dataset.ini",required=True)
     #create_dataset.py creates house mask besides the label masks. This is however not strictly nececeary and in order to avoiding adding an extra .gdb file to the repository we skip creation of house masks
     parser.add_argument("--skip",help ="steps in the process to be skipped: eg create_houses create_labels ",nargs ='+',default =["create_houses"],required=False)
-
     args = parser.parse_args()
-
     main(args)
