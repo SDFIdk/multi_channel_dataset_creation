@@ -103,7 +103,11 @@ class CreateMasks:
             x = basename#.upper().replace('.PNG','.tif').replace('.JPG','.tif').replace('.TIF','.tif')
             with arcpy.EnvManager(extent=rasterExtent):     # Sæt ortofotoets extent som default-extent i ArcGIS geoprocesserings-miljø.
                 outputFile = raw_mask_folder + "\\" + x
+
+                #the output labels need to be in .tif format in order for arcgis to be able to
+                outputFile= outputFile.replace(".jpg", ".tif")
                 reclassFile = mask_folder + "\\" + x
+                reclassFile = reclassFile.replace(".jpg", ".tif")
                 # bit_reclassFile = destination_path + "\\reclass\\bit_" + x
                 print("Outputdestfile = " + outputFile)
                 env.workspace = feature_workspace

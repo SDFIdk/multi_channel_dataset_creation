@@ -1,6 +1,6 @@
 import os
 from PIL import Image
-import numpy
+import numpy as np
 import pandas as pd
 import argparse
 import pathlib
@@ -218,6 +218,8 @@ if __name__ == "__main__":
                                     formatter_class=argparse.RawDescriptionHelpFormatter)
 
     parser.add_argument("-f", "--Folder_path", help="path to dataset folder",required=True)
+    parser.add_argument("-l", "--label_folder", help="path to labelfolder", required=True)
+
     parser.add_argument("-a", "--All_filename", help="all.txt filename .eg 'esbjerg++_all.txt'  -> esbjer++_all.txt and 'esbjerg++_all.xlsx'",required=True)
     parser.add_argument("-v", "--Valid_filename", help=".eg -v valid.txt",required=True)
     parser.add_argument("-d", "--Datatype", help=".eg -d .tif",required=True)
@@ -226,6 +228,10 @@ if __name__ == "__main__":
     parser.add_argument("--remove_images_without_label", action='store_true',help= "use this if you want to remove images  without labels from the all.txt and valid.txt files")
     parser.add_argument("--use_fixed_validation_set", action='store_true',
                         help="use this if you want to use an existing text file as valid.txt instead of creating one dynamically")
+    parser.add_argument("--remove_overlap", action='store_true',
+                        help="use this if you want to remove images  from all.txt and train.txt that partly overlap with images in valid.txt")
+
+
 
 
 
@@ -235,7 +241,7 @@ if __name__ == "__main__":
     
     args = parser.parse_args()
 
-    create_all_and_valid(all_txt_filename =args.All_filename,valid_txt_filename=args.Valid_filename,path_to_training_images=args.Folder_path,datatype=args.Datatype,nr_of_images_between_validation_samples=args.nr_of_images_between_validation_samples,other_data_folders=[pathlib.Path(folder_path) for folder_path in args.other_data_folders],remove_images_without_label=args.remove_images_without_label,use_fixed_validation_set=args.use_fixed_validation_set)
+    create_all_and_valid(all_txt_filename =args.All_filename,valid_txt_filename=args.Valid_filename,path_to_training_images=args.Folder_path,datatype=args.Datatype,nr_of_images_between_validation_samples=args.nr_of_images_between_validation_samples,other_data_folders=[pathlib.Path(folder_path) for folder_path in args.other_data_folders],remove_images_without_label=args.remove_images_without_label,use_fixed_validation_set=args.use_fixed_validation_set,label_folder =args.label_folder,remove_overlap=args.remove_overlap)
 
 
     #create_all_txt(folder_path=args.Folder_path,datatype=args.Datatype,all_txt_filename=args.All_filename,allowed_blocks=args.Allowed_blocks)

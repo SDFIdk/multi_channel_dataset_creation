@@ -18,8 +18,8 @@ def main(config):
         inputfolder = pathlib.Path(ini_parser[section]["folder_containing_all_image_types"])
         data_folder = pathlib.Path(ini_parser[section]["data_folder"])
         outputfolder = data_folder / (datatype)
-        replacestring = "_"+datatype+ ".tif"
-        newstring = ".tif"
+        replacestring = "_"+datatype+   ini_parser[section]["datatype"]
+        newstring = ini_parser[section]["datatype"]
         only_consider_files_with_matching_names = True
         move_instead_of_copy = True
 
