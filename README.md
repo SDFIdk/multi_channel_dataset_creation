@@ -67,9 +67,11 @@ pip install -e .
 
 
 
-## Usage example
+## Usage
+A small example dataset is included withy this repo. The following comand works on the provided example dataset
 
 python src/multi_channel_dataset_creation/create_dataset.py --dataset_config configs/create_dataset_example_dataset.ini
+
 For more help on the usage type
 python src/multi_channel_dataset_creation/create_dataset.py -h
 
