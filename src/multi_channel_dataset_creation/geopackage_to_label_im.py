@@ -129,6 +129,7 @@ def process_geotiff(geopackage_path, geotiff_path, output_geotiff_path, value_ma
         print("range of data in output_array is : " + str(output_array.flatten().min()) + " - " + str(output_array.flatten().max()))
 
         print(f"Output GeoTIFF saved to {output_geotiff_path}")
+        return True
 
     except Exception as e:
         print(f"Failed to process {geotiff_path}: {e}")

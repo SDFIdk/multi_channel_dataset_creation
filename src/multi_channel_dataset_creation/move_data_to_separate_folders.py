@@ -68,6 +68,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
 
     parser.add_argument("-f", "--inputfolder", help="path/to/original_folder",required=True, type=pathlib.Path)
+    parser.add_argument("--dataset_config",help ="path to config.ini file e.g ..\..\configs\template_create_dataset.ini",required=True)
 
     args = parser.parse_args()
 
