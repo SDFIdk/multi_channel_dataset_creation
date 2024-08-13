@@ -60,6 +60,12 @@ def process_geotiff(geopackage_path, geotiff_path, output_geotiff_path, value_ma
         # Load the geopackage
         print("reading geopackage..")
         gdf = gpd.read_file(geopackage_path,layer="GeoDanmark/BBR Bygning")
+
+        # Sort polygons by area (ascending order)
+        # this is done in order to handle the situation where several polygons overlap.
+        # in these situations the smallest polygon should have priority (the situation is almost always that a large polygon had some erro and was corected with a smaller polygon that was meant to be 'ontop' opf the older large one.)
+        print("sorting all polygons by area")
+        gdf = gdf.sort_values(by='geometry', key=lambda x: x.area)
         print("done")
 
 
@@ -115,6 +121,8 @@ def process_geotiff(geopackage_path, geotiff_path, output_geotiff_path, value_ma
             if not value_gdf.empty:
                 value_mask = geometry_mask([geom for geom in value_gdf.geometry], transform=transform, invert=True, out_shape=out_shape)
                 output_array[value_mask] = 0
+
+
 
 
 
