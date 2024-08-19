@@ -75,7 +75,7 @@ def remove_files_with_missing_labels_or_datasources(files_in_folder,other_data_f
     return images_that_have_all_datasources
 
 
-def create_all_txt(folder_path,datatype,all_txt_filename,other_data_folders,label_folder,remove_images_without_label):
+def create_all_txt(folder_path,datatype,all_txt_filename,other_data_folders,label_folder,remove_images_without_label,text_file_listing_images_to_consider=None):
     """
     Create all.txt file with all image files included in the folder_path
 
@@ -90,8 +90,13 @@ def create_all_txt(folder_path,datatype,all_txt_filename,other_data_folders,labe
     folder_path = pathlib.Path(folder_path)
 
 
-    #crate a list of iamge files
-    files_in_folder =os.listdir(folder_path)
+    if text_file_listing_images_to_consider:
+        with open(text_file_listing_images_to_consider, "r") as files_listed_in_txt_file:
+            files_in_folder = [line.strip() for line in files_listed_in_txt_file.readlines()]
+    else:
+        #crate a list of image files
+        files_in_folder =os.listdir(folder_path)
+
     files_in_folder = [x for x in files_in_folder if ((datatype in x )and (".xml" not in x ))]
 
     print("files in folder :"+str(len(files_in_folder)))
@@ -198,9 +203,8 @@ def remove_overlap_from_all_txt(path_to_all_txt,path_to_valid_txt,folder_path):
         (time.time() - create_all_without_overlap_txt_start) / 60) + ", minutes")
     return path_to_all_txt
 
-def create_all_and_valid(all_txt_filename,valid_txt_filename,path_to_training_images,datatype,nr_of_images_between_validation_samples,other_data_folders,label_folder,remove_images_without_label ,remove_overlap,use_fixed_validation_set):
-
-    create_all_txt(folder_path=path_to_training_images,datatype=datatype,all_txt_filename=all_txt_filename,other_data_folders=other_data_folders,label_folder=label_folder,remove_images_without_label=remove_images_without_label)
+def create_all_and_valid(all_txt_filename,valid_txt_filename,path_to_training_images,datatype,nr_of_images_between_validation_samples,other_data_folders,label_folder,remove_images_without_label ,remove_overlap,use_fixed_validation_set,text_file_listing_images_to_consider=None):
+    create_all_txt(folder_path=path_to_training_images,datatype=datatype,all_txt_filename=all_txt_filename,other_data_folders=other_data_folders,label_folder=label_folder,remove_images_without_label=remove_images_without_label,text_file_listing_images_to_consider=text_file_listing_images_to_consider)
     #we use a fixed validation set in order to easier be able to compare results between runs
     if not use_fixed_validation_set:
         create_valid_txt(all_txt_filename=all_txt_filename,valid_txt_filename=valid_txt_filename,pick_every=nr_of_images_between_validation_samples)
@@ -216,31 +220,29 @@ if __name__ == "__main__":
                                     epilog=usage_example,
                                     formatter_class=argparse.RawDescriptionHelpFormatter)
 
-    parser.add_argument("-f", "--Folder_path", help="path to dataset folder",required=True)
-    parser.add_argument("-l", "--label_folder", help="path to labelfolder", required=True)
+    parser.add_argument("-f", "--Folder_path", help="path to dataset folder e.g path/to/dataset/splitted/rgb",required=True)
+    parser.add_argument("-l", "--label_folder", help="path to labelfolder .eg path/to/dataset/labels/splitted_labels", required=True)
 
     parser.add_argument("-a", "--All_filename", help="all.txt filename .eg 'esbjerg++_all.txt'  -> esbjer++_all.txt and 'esbjerg++_all.xlsx'",required=True)
     parser.add_argument("-v", "--Valid_filename", help=".eg -v valid.txt",required=True)
     parser.add_argument("-d", "--Datatype", help=".eg -d .tif",required=True)
     parser.add_argument("-p", "--nr_of_images_between_validation_samples",type = int,default = 17, help=".eg pick every 17 when creating a validation set: -p 17",required=False)
-    parser.add_argument("--other_data_folders", help="e.g [T:\trainingdata\befastelse\ten_channels_1\data\splitted\cir T:\trainingdata\befastelse\ten_channels_1\data\splitted\DSM T:\trainingdata\befastelse\ten_channels_1\data\splitted\DTM T:\trainingdata\befastelse\ten_channels_1\data\splitted\OrtoCIR T:\trainingdata\befastelse\ten_channels_1\data\splitted\OrtoRGB]", nargs='+', default=[],required=False)
+    parser.add_argument("--other_data_folders", help="e.g T:\trainingdata\befastelse\ten_channels_1\data\splitted\cir T:\trainingdata\befastelse\ten_channels_1\data\splitted\DSM T:\trainingdata\befastelse\ten_channels_1\data\splitted\DTM T:\trainingdata\befastelse\ten_channels_1\data\splitted\OrtoCIR T:\trainingdata\befastelse\ten_channels_1\data\splitted\OrtoRGB", nargs='+', default=[],required=False)
     parser.add_argument("--remove_images_without_label", action='store_true',help= "use this if you want to remove images  without labels from the all.txt and valid.txt files")
     parser.add_argument("--use_fixed_validation_set", action='store_true',
                         help="use this if you want to use an existing text file as valid.txt instead of creating one dynamically")
     parser.add_argument("--remove_overlap", action='store_true',
                         help="use this if you want to remove images  from all.txt and train.txt that partly overlap with images in valid.txt")
 
-
-
-
-
+    parser.add_argument("--text_file_listing_images_to_consider", default = None,
+                        help="e.g subset_all.txt, use this if you want to use a txt file listing images to consider instead of listing the files that exists in one of the inputdata folders")
 
 
     
     
     args = parser.parse_args()
 
-    create_all_and_valid(all_txt_filename =args.All_filename,valid_txt_filename=args.Valid_filename,path_to_training_images=args.Folder_path,datatype=args.Datatype,nr_of_images_between_validation_samples=args.nr_of_images_between_validation_samples,other_data_folders=[pathlib.Path(folder_path) for folder_path in args.other_data_folders],remove_images_without_label=args.remove_images_without_label,use_fixed_validation_set=args.use_fixed_validation_set,label_folder =args.label_folder,remove_overlap=args.remove_overlap)
+    create_all_and_valid(all_txt_filename =args.All_filename,valid_txt_filename=args.Valid_filename,path_to_training_images=args.Folder_path,datatype=args.Datatype,nr_of_images_between_validation_samples=args.nr_of_images_between_validation_samples,other_data_folders=[pathlib.Path(folder_path) for folder_path in args.other_data_folders],remove_images_without_label=args.remove_images_without_label,use_fixed_validation_set=args.use_fixed_validation_set,label_folder =args.label_folder,remove_overlap=args.remove_overlap,text_file_listing_images_to_consider=args.text_file_listing_images_to_consider)
 
 
     #create_all_txt(folder_path=args.Folder_path,datatype=args.Datatype,all_txt_filename=args.All_filename,allowed_blocks=args.Allowed_blocks)
