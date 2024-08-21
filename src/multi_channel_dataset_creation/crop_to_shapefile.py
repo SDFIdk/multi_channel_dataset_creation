@@ -159,8 +159,10 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Crop GeoTIFF using a shapefile with a 10-pixel border.")
     parser.add_argument("--geotif", required=True, help="Path to the GeoTIFF file.")
     parser.add_argument("--shapefile", required=True, help="Path to the shapefile.")
+    parser.add_argument("--output_geotif", required=True, help="Path to new the GeoTIFF file")
+
     args = parser.parse_args()
 
-    output_path = "output_cropped7.tif"  # You can customize the output path if needed
-    main_crop_geotiff(args.geotif, args.shapefile, output_path)
+
+    main_crop_geotiff(args.geotif, args.shapefile, args.output_geotif)
 

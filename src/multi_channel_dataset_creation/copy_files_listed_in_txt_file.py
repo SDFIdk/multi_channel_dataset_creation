@@ -1,6 +1,7 @@
-#Some ML projects for semantic segmetnation e.g mask-dino assumes that the training data and validation data are in training and validation folders
-#This script use train.txt and valid.txt files for copying all iamges to this format.
-
+#usage .    first create a .txt file containing all file_names of the files you want to copy. e.g with create_txt_file_with_images_that_overlap_with_shapefile.py
+#           then use this script to copy all files with those names from a folder to another
+#           .eg 1. create txt_file copy from rgb folder to another rgb folder , copy from one cir folder to anotehr , copy from one label folder to another
+#           the fileformat can optioally be changed (if we for instance need to change from .tif to .jpg)
 import os
 import pathlib
 import shutil
@@ -21,19 +22,19 @@ def copy_files_to_folder(text_file,origin_folder,destination_folder,new_image_fo
         files = [origin_folder/line.rstrip() for line in lines if os.path.isfile(origin_folder/line.rstrip())]
     print("copying the images noted in " +str(text_file)+ " from :"+str(origin_folder) +" to "+str(destination_folder) +"...")
     for file in files:
-        im = Image.open(file)
-        im.save(destination_folder/file.with_suffix(new_image_format).name)
+        if new_image_format:
+            im = Image.open(file)
+            im.save(destination_folder/file.with_suffix(new_image_format).name)
+        else:
+            # Copy the file
+            shutil.copy(file, destination_folder)
 
     print("done copying the images noted in " +str(text_file)+ " from :"+str(origin_folder) +" to "+str(destination_folder) )
 
 
 
-def copy_to_train_and_valid_folders(origin_folder,train_folder,valid_folder,train_txt,valid_txt):
-    copy_files_to_folder(train_txt,origin_folder,train_folder)
-    copy_files_to_folder(valid_txt,origin_folder,valid_folder)
-
 if __name__ == "__main__":
-    example_usage= r"python copy_files_listed_in_txt_file.py "
+    example_usage= r"python copy_files_listed_in_txt_file.py --text_file --folder --new_folder"
     print("########################EXAMPLE USAGE########################")
     print(example_usage)
     print("#############################################################")
@@ -42,30 +43,15 @@ if __name__ == "__main__":
     # Initialize parser
     parser = argparse.ArgumentParser()
 
-    parser.add_argument("-t", "--Train_text_file", help="path/to/train.txt ",required=True, type=pathlib.Path)
-    parser.add_argument("-v", "--Valid_text_file", help="path/to/valid.txt ",required=True,type=pathlib.Path)
-    parser.add_argument("-l", "--LabelFolder", help="path/to/folder  e.g path/to/masks",required=True,type=pathlib.Path)
-    parser.add_argument("-i", "--ImageFolder", help="path/to/folder  e.g path/to/images",required=True,type=pathlib.Path)
+    parser.add_argument("-t", "--text_file", help="path/to/text_file.txt ",required=True, type=pathlib.Path)
 
-    parser.add_argument("--New_Image_format", help="e.g .jpg",default = ".jpg",required=False)
-    parser.add_argument("--New_Label_format", help="e.g .png",default = ".png",required=False)
+    parser.add_argument("-i", "--folder", help="path/to/folder  e.g path/to/images",required=True,type=pathlib.Path)
+    parser.add_argument("-i", "--new_folder", help="path/to/folder  e.g path/to/new_folder",required=True,type=pathlib.Path)
 
-    #images are copied to images/validation and images/training
-    parser.add_argument("--Valid_folder_name", help="folder name e.g validation",default = "validation", required=False)
-    parser.add_argument("--Training_folder_name", help="folder name e.g training",default = "training", required=False)
-
-    #labels are copied to annotations/training and annotations/validation
-    parser.add_argument("--New_label_folder", help="folder name e.g annotations",default = "annotations", required=False)
-    parser.add_argument("--New_image_folder", help="folder name e.g images",default = "images", required=False)
-
+    parser.add_argument("--New_Image_format", help="e.g .jpg",default=None,required=False)
 
 
     args = parser.parse_args()
 
     print("copying images")
     copy_files_to_folder(text_file=args.Valid_text_file,origin_folder=args.ImageFolder,destination_folder= args.ImageFolder.parent/args.New_image_folder/args.Valid_folder_name,new_image_format =args.New_Image_format )
-    copy_files_to_folder(text_file=args.Train_text_file,origin_folder=args.ImageFolder,destination_folder= args.ImageFolder.parent/args.New_image_folder/args.Training_folder_name,new_image_format =args.New_Image_format)
-
-    print("copying labels")
-    copy_files_to_folder(text_file=args.Valid_text_file,origin_folder=args.LabelFolder,destination_folder= args.ImageFolder.parent/args.New_label_folder/args.Valid_folder_name,new_image_format =args.New_Label_format)
-    copy_files_to_folder(text_file=args.Train_text_file,origin_folder=args.LabelFolder,destination_folder= args.ImageFolder.parent/args.New_label_folder/args.Training_folder_name,new_image_format =args.New_Label_format)

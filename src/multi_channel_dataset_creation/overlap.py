@@ -1,11 +1,19 @@
 #when splitting a trainingset into train and validation partitions it is important to be able to verify that the images in the two sets dont overlap
 #this module provide this functionality
 
-from osgeo import gdal
+from osgeo import gdal, ogr, osr
 import argparse
 import sys
+import numpy as np
+
+
 
 def geotiff_overlap(file1_path, file2_path):
+    """
+    :param file1_path:
+    :param file2_path:
+    :return: do the geotiff files overlap?
+    """
     try:
         # Open the first GeoTIFF file
         dataset1 = gdal.Open(file1_path, gdal.GA_ReadOnly)
@@ -35,6 +43,77 @@ def geotiff_overlap(file1_path, file2_path):
     except Exception as e:
         print(f"An error occurred: {str(e)}")
         sys.exit()
+
+
+
+def shp_geotif_overlap(shp_path, tiff_path):
+    """
+    :param shp_path: a .shp file with a nnumber of polygons.
+    :param tiff_path:
+    :return: do any of the envelopes of the polygons in the shapefile overlap with the geotiff?
+    """
+    # Open shapefile
+    shp_ds = ogr.Open(shp_path)
+    shp_layer = shp_ds.GetLayer()
+
+    # Open GeoTIFF file
+    tiff_ds = gdal.Open(tiff_path)
+    tiff_gt = tiff_ds.GetGeoTransform()
+    tiff_band = tiff_ds.GetRasterBand(1)
+
+    # Get extent of GeoTIFF
+    tiff_cols = tiff_ds.RasterXSize
+    tiff_rows = tiff_ds.RasterYSize
+    tiff_extent = (
+        tiff_gt[0],
+        tiff_gt[0] + tiff_cols * tiff_gt[1],
+        tiff_gt[3] + tiff_rows * tiff_gt[5],
+        tiff_gt[3]
+    )
+
+    # Get spatial reference of GeoTIFF dataset
+    tiff_srs = osr.SpatialReference()
+    tiff_srs.ImportFromWkt(tiff_ds.GetProjectionRef())
+
+    # Check overlap
+    for feature in shp_layer:
+        shp_geom = feature.GetGeometryRef()
+        shp_extent = shp_geom.GetEnvelope()
+
+        # Check if the bounding boxes overlap
+        if (
+                shp_extent[0] < tiff_extent[1] and
+                shp_extent[1] > tiff_extent[0] and
+                shp_extent[2] < tiff_extent[3] and
+                shp_extent[3] > tiff_extent[2]
+        ):
+            # Create a coordinate transformation
+            coord_transform = osr.CoordinateTransformation(shp_geom.GetSpatialReference(), tiff_srs)
+
+            # Transform the geometry
+            shp_geom.Transform(coord_transform)
+
+            # Get the transformed extent
+            shp_geom_extent = shp_geom.GetEnvelope()
+
+            # Ensure the transformed extent is within the valid range of the GeoTIFF
+            min_x, max_x = max(shp_geom_extent[0], tiff_extent[0]), min(shp_geom_extent[1], tiff_extent[1])
+            min_y, max_y = max(shp_geom_extent[2], tiff_extent[2]), min(shp_geom_extent[3], tiff_extent[3])
+
+            if min_x < max_x and min_y < max_y:
+                # Read raster data for the overlapping area
+                tiff_window = tiff_band.ReadAsArray(
+                    int((min_x - tiff_gt[0]) / tiff_gt[1]),
+                    int((tiff_gt[3] - max_y) / -tiff_gt[5]),
+                    int((max_x - min_x) / tiff_gt[1]),
+                    int((max_y - min_y) / -tiff_gt[5])
+                )
+
+                # Check if there is any overlap in the pixel values
+                if np.any(tiff_window):
+                    return True
+
+    return False
 
 
 if __name__ == "__main__":
