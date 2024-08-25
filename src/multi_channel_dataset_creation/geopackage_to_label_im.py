@@ -165,6 +165,11 @@ def process_all_geotiffs(geopackage_path, input_folder, output_folder, value_map
     print("")
     if input_files:
         print("processing all files listed in the input txt file..")
+        with open(input_files, 'r') as file:
+            # Read all lines and store them in a list, without newline characters
+            print(input_files)
+            input_files = file.read().splitlines()
+            print(input_files)
     else:
         print("processing all files in the input folder")
         input_files = os.listdir(input_folder)
