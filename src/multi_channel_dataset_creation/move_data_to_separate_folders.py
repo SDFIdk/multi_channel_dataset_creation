@@ -51,7 +51,7 @@ def main(args):
         print("moving data of type :"+str(datatype) +" from : "+str(inputfolder)+ " to "+str(outputfolder))
         if crop_to_shapefile_plus_buffer:
             import crop_to_shapefile # importing this here in order to avoid having dependency to rasterio when creating labels in the arcgis environment
-            crop_to_shapefile.main(inputfolder ,outputfolder,replacestring,newstring,only_consider_files_with_matching_names,shapefile_path=get_shapefile(args) )
+            crop_to_shapefile.main(inputfolder ,outputfolder,replacestring=replacestring,newstring=newstring,only_consider_files_with_matching_names= only_consider_files_with_matching_names,shapefile_path=get_shapefile(args) )
         else:        
             rename_files.main(inputfolder ,outputfolder,replacestring,newstring,only_consider_files_with_matching_names,move_instead_of_copy)
 

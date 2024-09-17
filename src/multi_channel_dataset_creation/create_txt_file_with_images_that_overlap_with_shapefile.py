@@ -2,7 +2,7 @@ from osgeo import gdal
 import argparse
 import sys
 import os
-import overlap
+from multi_channel_dataset_creation import overlap
 import pathlib
 
 
@@ -43,7 +43,7 @@ def create_txt_file_with_files_overlapping_with_shp_file(shape_file,folder,outpu
     pathlib.Path(pathlib.Path(output_txt).parent).mkdir(parents=True, exist_ok=True)
     with open(output_txt, 'w') as f:
         f.write('\n'.join(overlapping_tif_files))
-    print("printed the filenames to the file : " + output_txt)
+    print("printed the filenames to the file : " + str(output_txt))
 
 
 

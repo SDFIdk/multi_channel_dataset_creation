@@ -11,6 +11,7 @@ from rasterio.features import geometry_mask
 import numpy as np
 from osgeo import gdal
 import fiona
+from pathlib import Path
 
 
 
@@ -35,9 +36,21 @@ def load_mapping(path):
     with open(path, 'r') as f:
         return json.load(f)
 
-def process_geotiff(gdf, geotiff_path, output_geotiff_path, value_map,unknown_boarder_size ):
+def process_geotiff(geopackage, geotiff_path, output_geotiff_path, path_to_mapping,create_new_mapping, unknown_boarder_size ):
+    print("reading geopackage..")
+    gdf = gpd.read_file(geopackage,layer="GeoDanmark/BBR Bygning")
+
+    if create_new_mapping:
+        #gdf = gpd.read_file(geopackage,layer="GeoDanmark/BBR Bygning")
+        value_map = create_mapping(gdf)
+        save_mapping(value_map, path_to_mapping)
+    else:
+        value_map = load_mapping(path_to_mapping)
+
+
     print("#################################################################################")
     print(f"#### Working on creating: {output_geotiff_path} ####")
+    Path(output_geotiff_path).parent.mkdir(parents=True, exist_ok=True)
     print(f"Area defined by: {geotiff_path}")
 
     try:
@@ -210,14 +223,8 @@ def main():
 
     args = parser.parse_args()
 
-    if args.create_new_mapping:
-        gdf = gpd.read_file(args.geopackage,layer="GeoDanmark/BBR Bygning")
-        value_map = create_mapping(gdf)
-        save_mapping(value_map, args.path_to_mapping)
-    else:
-        value_map = load_mapping(args.path_to_mapping)
-
-    process_all_geotiffs(args.geopackage, args.input_folder, args.output_folder, value_map,args.unknown_boarder_size,input_files=args.input_files)
+    process_geotiff(geopackage=args.geopackage, geotiff_path=args.args.input_folder, output_geotiff_path=output_folder, path_to_mapping=args.path_to_mapping,create_new_mapping=args.create_new_mapping,unknown_boarder_size=args.unknown_boarder_size )
+    #process_all_geotiffs(args.geopackage, args.input_folder, args.output_folder, args.path_to_mapping,args.create_new_mapping,args.unknown_boarder_size,input_files=args.input_files)
 
 if __name__ == '__main__':
     main()

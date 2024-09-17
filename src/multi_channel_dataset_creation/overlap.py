@@ -53,6 +53,37 @@ def shp_geotif_overlap(shp_path, tiff_path):
     :return: do any of the envelopes of the polygons in the shapefile overlap with the geotiff?
     """
     # Open shapefile
+    #import geopandas as gpd
+
+    # Load the shapefile using GeoPandas
+    #gdf = gpd.read_file(shp_path)
+    #print(gdf.head())
+    #input(shp_path)
+
+
+    #from osgeo import ogr
+
+    # Register shapefile driver (without this ogr cant read a shapefile created by geopandas)
+    ogr.RegisterAll()
+
+    # Specify the shapefile driver
+    #driver = ogr.GetDriverByName("ESRI Shapefile")
+    #if driver is None:
+    #    raise Exception("Shapefile driver not available.")
+
+    # Try opening the shapefile explicitly using the driver
+    #shp_ds = driver.Open(shp_path, 0)  # 0 means read-only mode
+    #if shp_ds is None:
+    #    raise Exception(f"Failed to open shapefile: {shp_path}")
+    #else:
+    #    print("Shapefile opened successfully!")
+
+    # Access the layer
+    #shp_layer = shp_ds.GetLayer()
+    #print(f"Layer name: {shp_layer.GetName()}")
+    ##EDN OF TEST PASTE
+
+
     shp_ds = ogr.Open(shp_path)
     shp_layer = shp_ds.GetLayer()
 
