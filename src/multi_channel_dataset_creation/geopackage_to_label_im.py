@@ -37,8 +37,11 @@ def load_mapping(path):
         return json.load(f)
 
 def process_geotiff(geopackage, geotiff_path, output_geotiff_path, path_to_mapping,create_new_mapping, unknown_boarder_size ):
-    print("reading geopackage..")
-    gdf = gpd.read_file(geopackage,layer="GeoDanmark/BBR Bygning")
+    if isinstance(geopackage, str):
+        print("reading geopackage..")
+        gdf = gpd.read_file(geopackage,layer="GeoDanmark/BBR Bygning")
+    else:
+        gdf = geopackage
 
     if create_new_mapping:
         #gdf = gpd.read_file(geopackage,layer="GeoDanmark/BBR Bygning")
@@ -117,11 +120,11 @@ def process_geotiff(geopackage, geotiff_path, output_geotiff_path, path_to_mappi
             else:
                 print("no polygons with value 'Dårlig label'")
 
-            #set all values with label 'Ukendt' til unkown==0
-            value_gdf = gdf[gdf['AI tagklasse (Beregnet)'] == "Ukendt"]
-            if not value_gdf.empty:
-                value_mask = geometry_mask([geom for geom in value_gdf.geometry], transform=transform, invert=True, out_shape=out_shape)
-                output_array[value_mask] = 0
+            #THIS STEP SHOULD NOT BE NECECEARY SINCE IT IS CAPTURED IN THE mapping.,txt set all values with label 'Ukendt' til unkown==0
+            ##value_gdf = gdf[gdf['AI tagklasse (Beregnet)'] == "Ukendt"]
+            ##if not value_gdf.empty:
+            ##    value_mask = geometry_mask([geom for geom in value_gdf.geometry], transform=transform, invert=True, out_shape=out_shape)
+            ##    output_array[value_mask] = 0
 
             # if there are alternative labels these override everything else!
             # this should overwrite the 0 values except at the boarder areas
@@ -193,8 +196,7 @@ def process_all_geotiffs(geopackage_path, input_folder, output_folder, value_map
             output_path = os.path.join(output_folder, file_name)
 
 
-
-            if not process_geotiff(gdf, input_path, output_path, value_map,unknown_boarder_size):
+            if not process_geotiff(gdf, input_path, output_path, value_map,False,unknown_boarder_size):
                 failed_files.append(file_name)
 
     # Save the failed files to a text file
@@ -222,8 +224,12 @@ def main():
 
 
     args = parser.parse_args()
-
-    process_geotiff(geopackage=args.geopackage, geotiff_path=args.args.input_folder, output_geotiff_path=output_folder, path_to_mapping=args.path_to_mapping,create_new_mapping=args.create_new_mapping,unknown_boarder_size=args.unknown_boarder_size )
+    if Path(args.input_folder).is_dir():
+        print("creating labels for all images in a folder")
+        process_all_geotiffs(geopackage_path=args.geopackage, input_folder=args.input_folder, output_folder=args.output_folder, value_map=args.path_to_mapping,unknown_boarder_size=args.unknown_boarder_size,input_files=args.input_files)
+    else:
+        print("creating labels for singel image")
+        process_geotiff(geopackage=args.geopackage, geotiff_path=args.input_folder, output_geotiff_path=args.output_folder, path_to_mapping=args.path_to_mapping,create_new_mapping=args.create_new_mapping,unknown_boarder_size=args.unknown_boarder_size )
     #process_all_geotiffs(args.geopackage, args.input_folder, args.output_folder, args.path_to_mapping,args.create_new_mapping,args.unknown_boarder_size,input_files=args.input_files)
 
 if __name__ == '__main__':

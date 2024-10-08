@@ -4,28 +4,38 @@ import numpy as np
 from pathlib import Path
 import configparser
 
-def remap_diff_image_to_only_show_red_and_green(image_path, output_path):
+def remap_diff_image_to_only_show_red_and_green(image_path, output_path,false_positive_roofs_set_to=2,false_negative_roof_set_to=1, unknown_labels_set_to = 0):
     #creating diff image where only to much detected roof or to little detected roofs is shown
+    #data in range [10, 18] means model did not classify as any kind of roof when label says some kind of roof
+    #data ending with 1 means model says some kind of roof when label dont say some kind of roof. (1 == label says background)
+    #places where label says unkown shoud be treated separately (these are the values that ends with 0)
+ 
     # Open the GeoTIFF image using rasterio
     with rasterio.open(image_path) as src:
         # Read the image as a NumPy array
         img_array = src.read(1)  # Read the first band (grayscale)
 
+        #areas with label == unknown
+        unkown_label_mask = img_array % 10 == 0
+
+
+        # MODEL did not find roof
         # Apply the first condition: Set values in range [10, 18] to 1
-        set_to_one_mask = (img_array >= 10) & (img_array <= 18)
+        false_negative_roof_mask = (img_array >= 10) & (img_array <= 18)
 
 
+        # Model found non-existing roof
         # Apply the second condition: Set values that end with 1 to 2
-        set_to_two_mask = img_array % 10 == 1
+        false_positive_roof_mask = img_array % 10 == 1
 
 
 
-        img_array[set_to_one_mask] = 1
-
-        img_array[set_to_two_mask] = 2
+        img_array[false_negative_roof_mask] = false_negative_roof_set_to
+        img_array[false_positive_roof_mask] = false_positive_roofs_set_to
+        img_array[unkown_label_mask] = unknown_labels_set_to
 
         # Set all other values to 0
-        img_array[(img_array != 1) & (img_array != 2)] = 0
+        img_array[(img_array != false_negative_roof_set_to) & (img_array != false_positive_roofs_set_to) & (img_array != unknown_labels_set_to)]   = 0
 
         # Define the metadata for the output file (same as input)
         metadata = src.meta.copy()
