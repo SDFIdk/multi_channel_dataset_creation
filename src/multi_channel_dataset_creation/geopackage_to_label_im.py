@@ -36,16 +36,19 @@ def load_mapping(path):
     with open(path, 'r') as f:
         return json.load(f)
 
-def process_geotiff(geopackage, geotiff_path, output_geotiff_path, path_to_mapping,create_new_mapping, unknown_boarder_size ):
+def process_geotiff(geopackage, geotiff_path, output_geotiff_path, path_to_mapping,create_new_mapping, unknown_boarder_size,layer ,atribute):
     if isinstance(geopackage, str):
         print("reading geopackage..")
-        gdf = gpd.read_file(geopackage,layer="GeoDanmark/BBR Bygning")
+        if layer:
+            complete_gdf = gpd.read_file(geopackage,layer=layer)
+        else:
+            complete_gdf = gpd.read_file(geopackage)
     else:
-        gdf = geopackage
+        complete_gdf = geopackage
 
     if create_new_mapping:
         #gdf = gpd.read_file(geopackage,layer="GeoDanmark/BBR Bygning")
-        value_map = create_mapping(gdf)
+        value_map = create_mapping(complete_gdf)
         save_mapping(value_map, path_to_mapping)
     else:
         value_map = load_mapping(path_to_mapping)
@@ -79,7 +82,14 @@ def process_geotiff(geopackage, geotiff_path, output_geotiff_path, path_to_mappi
         with rasterio.open(geotiff_path) as src:
             profile = src.profile
             transform = src.transform
+            bounds = src.bounds
+            from shapely.geometry import box
+            image_bbox = box(bounds.left, bounds.bottom, bounds.right, bounds.top)
             out_shape = src.shape
+
+            # Subset the GeoDataFrame using spatial index (fast)
+            possible_matches_index = complete_gdf.sindex.query(image_bbox, predicate='intersects')
+            subset_gdf = complete_gdf.iloc[possible_matches_index]
 
             # Ensure the profile for the output is for a single-band image
             profile.update(
@@ -97,26 +107,44 @@ def process_geotiff(geopackage, geotiff_path, output_geotiff_path, path_to_mappi
             #fill building polygons with value coresponding to roof material
             #also make a boarder filled with 0 == ignore_label so that the model dont have to classify the boarderpixels
             # Set all values covered by a polygon plus a buffer of size 1 to zero
-            if not gdf.empty:
-                value_mask = geometry_mask([geom.buffer(unknown_boarder_size/2) for geom in gdf.geometry], transform=transform, invert=True, out_shape=out_shape)
+
+
+
+
+
+            if not subset_gdf.empty:
+                value_mask = geometry_mask([geom.buffer(unknown_boarder_size/2) for geom in subset_gdf.geometry], transform=transform, invert=True, out_shape=out_shape)
                 output_array[value_mask] = 0
+
+
             # Assign values to the output array based on the attribute values
             # this should overwrite the 0 values except at the boarder areas
-            for value, int_value in value_map.items():
-                value_gdf = gdf[gdf['AI tagklasse (Beregnet)'] == value]
+            if atribute:
+                for value, int_value in value_map.items():
+                    if atribute:
+                        value_gdf = subset_gdf[subset_gdf['AI tagklasse (Beregnet)'] == value]
+                    else:
+                       value_gdf = subset_gdf
 
+                    if not value_gdf.empty:
+                        value_mask = geometry_mask([geom.buffer(-unknown_boarder_size/2) for geom in value_gdf.geometry], transform=transform, invert=True, out_shape=out_shape)
+                        output_array[value_mask] = int_value
+            else:
+                value_gdf = subset_gdf
                 if not value_gdf.empty:
                     value_mask = geometry_mask([geom.buffer(-unknown_boarder_size/2) for geom in value_gdf.geometry], transform=transform, invert=True, out_shape=out_shape)
-                    output_array[value_mask] = int_value
+                    # the label for building is 2 (1 is background and 0 is ignore_label)
+                    output_array[value_mask] = 2
 
             #3.handle invalid labels
             #handle invalid labels by setting them to 0 == ingore_label
             # Set all areas with "Dårlig label" == True to unknown
-            unknown_gdf = gdf[gdf['Dårlig label']==True]
-            #print(unknown_gdf)
-            if not unknown_gdf.empty:
-                unknown_mask = geometry_mask([geom.buffer(unknown_boarder_size/2) for geom in unknown_gdf.geometry], transform=transform, invert=True, out_shape=out_shape)
-                output_array[unknown_mask] = 0
+            if 'Dårlig label' in subset_gdf.columns:
+                unknown_gdf = subset_gdf[subset_gdf['Dårlig label']==True]
+                #print(unknown_gdf)
+                if not unknown_gdf.empty:
+                    unknown_mask = geometry_mask([geom.buffer(unknown_boarder_size/2) for geom in unknown_gdf.geometry], transform=transform, invert=True, out_shape=out_shape)
+                    output_array[unknown_mask] = 0
             else:
                 print("no polygons with value 'Dårlig label'")
 
@@ -128,12 +156,13 @@ def process_geotiff(geopackage, geotiff_path, output_geotiff_path, path_to_mappi
 
             # if there are alternative labels these override everything else!
             # this should overwrite the 0 values except at the boarder areas
-            for value, int_value in value_map.items():
-                value_gdf = gdf[gdf['Alternativ tagklasse (Manuelt verificeret)'] == value]
+            if 'Alternativ tagklasse (Manuelt verificeret)' in subset_gdf.columns:
+                for value, int_value in value_map.items():
+                    value_gdf = subset_gdf[subset_gdf['Alternativ tagklasse (Manuelt verificeret)'] == value]
 
-                if not value_gdf.empty:
-                    value_mask = geometry_mask([geom.buffer(-unknown_boarder_size/2) for geom in value_gdf.geometry], transform=transform, invert=True, out_shape=out_shape)
-                    output_array[value_mask] = int_value
+                    if not value_gdf.empty:
+                        value_mask = geometry_mask([geom.buffer(-unknown_boarder_size/2) for geom in value_gdf.geometry], transform=transform, invert=True, out_shape=out_shape)
+                        output_array[value_mask] = int_value
 
 
 
@@ -151,7 +180,7 @@ def process_geotiff(geopackage, geotiff_path, output_geotiff_path, path_to_mappi
         return False
 
 
-def process_all_geotiffs(geopackage_path, input_folder, output_folder, value_map,unknown_boarder_size,input_files):
+def process_all_geotiffs(geopackage_path, input_folder, output_folder, value_map,unknown_boarder_size,input_files,layer,atribute):
     if not os.path.exists(output_folder):
         os.makedirs(output_folder)
 
@@ -161,7 +190,10 @@ def process_all_geotiffs(geopackage_path, input_folder, output_folder, value_map
     print("###############################################################################")
     print("###############################################################################")
     print("reading geopackage..")
-    gdf = gpd.read_file(geopackage_path,layer="GeoDanmark/BBR Bygning")
+    if layer:
+        gdf = gpd.read_file(geopackage_path,layer=layer)
+    else:
+        gdf = gpd.read_file(geopackage_path)
     #adding aera as a column makes it easier to sort the dataframe by area
     gdf['area'] = gdf.geometry.area  # Calculate the area if not already present
 
@@ -196,7 +228,7 @@ def process_all_geotiffs(geopackage_path, input_folder, output_folder, value_map
             output_path = os.path.join(output_folder, file_name)
 
 
-            if not process_geotiff(gdf, input_path, output_path, value_map,False,unknown_boarder_size):
+            if not process_geotiff(gdf, input_path, output_path, value_map,False,unknown_boarder_size,layer=layer,atribute=atribute):
                 failed_files.append(file_name)
 
     # Save the failed files to a text file
@@ -222,15 +254,16 @@ def main():
     parser.add_argument('--path_to_mapping', type=str, required = False,default ='/mnt/T/mnt/trainingdata/bygningsudpegning/iter_4/roof_no_roof_mapping.txt', help='Path to save or load the mapping file')
     parser.add_argument('--unknown_boarder_size', type=float, default=0.1, help='how large boarder of "unkown"==0 values should there be around the areas defined by polygons? set to 0 to not have any boarder at all. 0.1 is interpreted as 0.1 meter of boarder ')
     parser.add_argument('--input_files', type=str, default=False, help='optional path to txt file withy filenames instead of using all files in folder')
-
+    parser.add_argument('--layer', type=str,default = None, help='layer in geopackage file do use: eg "GeoDanmark/BBR Bygning"')   
+    parser.add_argument('--atribute', type=str,default = None, help='should we use values from a specific atribute instead of simply using 1? e.g "AI tagklasse (Beregnet)"')
 
     args = parser.parse_args()
     if Path(args.input_folder).is_dir():
         print("creating labels for all images in a folder")
-        process_all_geotiffs(geopackage_path=args.geopackage, input_folder=args.input_folder, output_folder=args.output_folder, value_map=args.path_to_mapping,unknown_boarder_size=args.unknown_boarder_size,input_files=args.input_files)
+        process_all_geotiffs(geopackage_path=args.geopackage, input_folder=args.input_folder, output_folder=args.output_folder, value_map=args.path_to_mapping,unknown_boarder_size=args.unknown_boarder_size,input_files=args.input_files,layer = args.layer,atribute=args.atribute)
     else:
         print("creating labels for singel image")
-        process_geotiff(geopackage=args.geopackage, geotiff_path=args.input_folder, output_geotiff_path=args.output_folder, path_to_mapping=args.path_to_mapping,create_new_mapping=args.create_new_mapping,unknown_boarder_size=args.unknown_boarder_size )
+        process_geotiff(geopackage=args.geopackage, geotiff_path=args.input_folder, output_geotiff_path=args.output_folder, path_to_mapping=args.path_to_mapping,create_new_mapping=args.create_new_mapping,unknown_boarder_size=args.unknown_boarder_size ,layer = args.layer,atribute=args.atribute)
     #process_all_geotiffs(args.geopackage, args.input_folder, args.output_folder, args.path_to_mapping,args.create_new_mapping,args.unknown_boarder_size,input_files=args.input_files)
 
 if __name__ == '__main__':
