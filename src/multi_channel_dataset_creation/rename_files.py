@@ -43,7 +43,7 @@ if __name__ == "__main__":
     parser.add_argument("-n", "--newstring", help="e.g new_image_copy",required=True)
     parser.add_argument('-m','--move_instead_of_copy',
                         help='should we move the file isntead of copying it? -m-> True , no -m -> False: ',action = 'store_true',default=False)
-    parser.add_argument('--Only_consider_files_with_matching_names',
+    parser.add_argument('--only_consider_files_with_matching_names',
                         help='Only_consider_files_with_matching_names?',action = 'store_true',default=False)
 
 
