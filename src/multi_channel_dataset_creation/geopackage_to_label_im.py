@@ -36,7 +36,7 @@ def load_mapping(path):
     with open(path, 'r') as f:
         return json.load(f)
 
-def process_geotiff(geopackage, geotiff_path, output_geotiff_path, path_to_mapping,create_new_mapping, unknown_boarder_size,layer ,atribute):
+def process_geotiff(geopackage, geotiff_path, output_geotiff_path, path_to_mapping,create_new_mapping, unknown_boarder_size,layer=None ,atribute=None):
     if isinstance(geopackage, str):
         print("reading geopackage..")
         if layer:
@@ -180,7 +180,7 @@ def process_geotiff(geopackage, geotiff_path, output_geotiff_path, path_to_mappi
         return False
 
 
-def process_all_geotiffs(geopackage_path, input_folder, output_folder, value_map,unknown_boarder_size,input_files,layer,atribute):
+def process_all_geotiffs(geopackage_path, input_folder, output_folder, value_map,unknown_boarder_size,input_files,layer=None,atribute=None):
     if not os.path.exists(output_folder):
         os.makedirs(output_folder)
 
