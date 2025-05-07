@@ -122,4 +122,4 @@ if __name__ == "__main__":
 
 
     #### RUN ####
-    create_txt_file_with_files_overlapping_with_shp_file(shape_file=args.shapefile,folder=args.folder,output_txt=args.output_txt,images_must_be_crops_of_these_images_path=args.images_must_be_crops_of_these_images_path)
+    create_txt_file_with_files_overlapping_with_shp_file(shape_file=args.shapefile,folder=args.folder,output_txt=args.output_txt,images_must_be_crops_of_these_images_path=args.images_must_be_crops_of_these_images_path,prune_to_fewer_images=False)

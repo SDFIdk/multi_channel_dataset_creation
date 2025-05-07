@@ -1,7 +1,7 @@
 #use this script to turn geopackages into label images
 # for instructions, do:
 # python geopackage_to_label_im.py -h
-
+import time 
 import argparse
 import os
 import json
@@ -37,13 +37,17 @@ def load_mapping(path):
         return json.load(f)
 
 def process_geotiff(geopackage, geotiff_path, output_geotiff_path, path_to_mapping,create_new_mapping, unknown_boarder_size,layer=None ,atribute=None):
+    process_geotiff_start= time.time()
     if isinstance(geopackage, str):
         print("reading geopackage..")
+        reading_geopkg_start = time.time()
         if layer:
             complete_gdf = gpd.read_file(geopackage,layer=layer)
         else:
             complete_gdf = gpd.read_file(geopackage)
+        print("reading geopackage took: "+str(   (time.time()-reading_geopkg_start)/60 )+ " minutes")
     else:
+        print("creating label image with preloaded geopackage")
         complete_gdf = geopackage
 
     if create_new_mapping:
@@ -111,7 +115,8 @@ def process_geotiff(geopackage, geotiff_path, output_geotiff_path, path_to_mappi
 
 
 
-
+            #set teh areas covered by the polygon + a buffer to 0 (unknown)
+            #we can later set the area without buffer to the label class
             if not subset_gdf.empty:
                 value_mask = geometry_mask([geom.buffer(unknown_boarder_size/2) for geom in subset_gdf.geometry], transform=transform, invert=True, out_shape=out_shape)
                 output_array[value_mask] = 0
@@ -130,11 +135,14 @@ def process_geotiff(geopackage, geotiff_path, output_geotiff_path, path_to_mappi
                         value_mask = geometry_mask([geom.buffer(-unknown_boarder_size/2) for geom in value_gdf.geometry], transform=transform, invert=True, out_shape=out_shape)
                         output_array[value_mask] = int_value
             else:
+                #set the area covered by the polygon to class 2 for buildings
                 value_gdf = subset_gdf
                 if not value_gdf.empty:
-                    value_mask = geometry_mask([geom.buffer(-unknown_boarder_size/2) for geom in value_gdf.geometry], transform=transform, invert=True, out_shape=out_shape)
+                    valid_geometries = [geom for geom in subset_gdf.geometry if geom.is_valid and not geom.is_empty]
+                    value_mask = geometry_mask(valid_geometries, transform=transform, invert=True, out_shape=out_shape)
                     # the label for building is 2 (1 is background and 0 is ignore_label)
                     output_array[value_mask] = 2
+
 
             #3.handle invalid labels
             #handle invalid labels by setting them to 0 == ingore_label
@@ -171,9 +179,11 @@ def process_geotiff(geopackage, geotiff_path, output_geotiff_path, path_to_mappi
         with rasterio.open(output_geotiff_path, 'w', **profile) as dst:
             dst.write(output_array, 1)
         print("range of data in output_array is : " + str(output_array.flatten().min()) + " - " + str(output_array.flatten().max()))
+        print("processing geotiff took in all : "+ str((time.time() -process_geotiff_start)/60 )+" minutes")
 
         print(f"Output GeoTIFF saved to {output_geotiff_path}")
-        return True
+
+        return subset_gdf
 
     except Exception as e:
         print(f"Failed to process {geotiff_path}: {e}")
@@ -228,7 +238,9 @@ def process_all_geotiffs(geopackage_path, input_folder, output_folder, value_map
             output_path = os.path.join(output_folder, file_name)
 
 
-            if not process_geotiff(gdf, input_path, output_path, value_map,False,unknown_boarder_size,layer=layer,atribute=atribute):
+            try:
+                process_geotiff(gdf, input_path, output_path, value_map,False,unknown_boarder_size,layer=layer,atribute=atribute)
+            except:
                 failed_files.append(file_name)
 
     # Save the failed files to a text file
