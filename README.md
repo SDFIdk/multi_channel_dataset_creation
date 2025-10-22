@@ -1,75 +1,110 @@
-# Creating a dataset for semantic segmentation based on multi-channel images
-Combining images and lidar data from different sources into a single multi-channel image dataset.
-Also handle conversion of labels stored as geopackage files plygon featureclass into geotiff label-images. 
-The finnished dataset is meant to be used for training and inference with  https://github.com/SDFIdk/ML_sdfi_fastai2 
- 
+# Multi-Channel Dataset Creation for Semantic Segmentation
 
-Data
-- Georeferenced Orthophoto (https://datafordeler.dk/dataoversigt/geodanmark-ortofoto/)
-- Georeferenced ortho-version of the downward facing camera("lod-billede") from oblique images(https://dataforsyningen.dk/data/1036)
-- Georeferenced DTM
-- Georeferenced DSM
+This repository provides tools to create semantic segmentation datasets by combining imagery and LiDAR data from multiple geospatial sources into unified multi-channel image datasets.  
+Us it to split up data and labels into patches. It can also handle division of dataset into train and test/valid subsets while taking geographical overlap into consideration.
+It also supports conversion of labeled polygons stored in GeoPackage files into GeoTIFF label images.  
 
-## Example of folder structure:
-    training_dataset:
-      labels:
-        large_labels:
-          image-x.tif 
-        data:
-          original_data:		
-            image-X_rgb.tif
-            image-X_cir.tif
-            image-X_OrtoRGB.tif
-            image-X_OrtoCir.tif
-            image-X_DSM.tif
-            image-X_DTM.tif
-          rgb:
-            image-X.tif
-          cir:
-            image-X.tif          
-          OrtoRGB:
-            image-X.tif          
-          OrtoCIR:
-            image-X.tif         
-          DSM:
-            image-X.tif
-          DTM:
-            image-X.tif            
-          
-Images in original_data will be renamed and moved to the rgb, cir, OrtoRGB, OrtoCIR, DSM and DTM folders.
+The resulting datasets can be used for training and inference with [ML_sdfi_fastai2](https://github.com/SDFIdk/ML_sdfi_fastai2).
 
-If no images exists in original_data folder, images in  rgb, cir, OrtoRGB, OrtoCIR, DSM and DTM folders will be used instead.
+---
 
-Labels
-- A geopackage with different areas marked up with polygons
+## 📦 Data Sources
 
+The dataset combines the following georeferenced layers:
 
+- **Orthophoto:** [GeoDanmark Orthophoto](https://datafordeler.dk/dataoversigt/geodanmark-ortofoto/)  
+- **Oblique Camera (Ortho Version):** [LOD Images](https://dataforsyningen.dk/data/1036)  
+- **Digital Terrain Model (DTM):** [Danmarks Højdemodel – DHM Raster Download](https://datafordeler.dk/dataoversigt/danmarks-hoejdemodel-dhm/dhm-fildownload-raster/)  
+- **Digital Surface Model (DSM):** [Danmarks Højdemodel – DHM Raster Download](https://datafordeler.dk/dataoversigt/danmarks-hoejdemodel-dhm/dhm-fildownload-raster/)  
 
-## Installation 
+---
+
+## 📂 Example Folder Structure
+
+```
+training_dataset/
+  labels/
+    large_labels/
+      image-x.tif
+  data/
+    original_data/
+      image-X_rgb.tif
+      image-X_cir.tif
+      image-X_OrtoRGB.tif
+      image-X_OrtoCIR.tif
+      image-X_DSM.tif
+      image-X_DTM.tif
+    rgb/
+      image-X.tif
+    cir/
+      image-X.tif
+    OrtoRGB/
+      image-X.tif
+    OrtoCIR/
+      image-X.tif
+    DSM/
+      image-X.tif
+    DTM/
+      image-X.tif
+```
+
+Images located in the `original_data` folder will be renamed and distributed into the appropriate subfolders (`rgb`, `cir`, `OrtoRGB`, `OrtoCIR`, `DSM`, `DTM`).  
+If `original_data` is empty, the tool will use existing images from these subfolders.
+
+---
+
+## 🗺️ Labels
+
+Labels should be provided as **GeoPackages** containing polygon features marking different semantic areas.  
+These will be rasterized into GeoTIFF label images during dataset creation.
+
+---
+
+## ⚙️ Installation
+
+```bash
 git clone https://github.com/rasmuspjohansson/multi_channel_dataset_creation.git
-
 cd multi_channel_dataset_creation
 
 conda env create -f environment.yml
-
 conda activate multi-channel-env
 
-Install the library in 'editable' mode. Editable mode makes sure that a change in the code also updates the installed version of the code  
+# Install in editable mode so changes in the source code are reflected immediately
 pip install -e .
+```
 
+---
 
+## 🚀 Usage
 
-## Usage
-A small example dataset is included withy this repo. The following comand works on the provided example dataset
+A small example dataset is included with this repository.  
+You can generate a dataset using the example configuration:
 
-python src/multi_channel_dataset_creation/create_dataset.py --dataset_config configs/create_dataset_example_dataset.ini
+```bash
+python src/multi_channel_dataset_creation/create_dataset.py   --dataset_config configs/create_dataset_example_dataset.ini
+```
 
-For more help on the usage type
+To see all available options:
+
+```bash
 python src/multi_channel_dataset_creation/create_dataset.py -h
+```
 
-An example on how to create label images from a geopackage is:
-python src/multi_channel_dataset_creation/geopackage_to_label_v2.py --geopackage example_dataset/labels/example_dataset.gpkg --input_folder example_dataset/data/rgb/ --output_folder example_dataset/labels/large_label/ --atribute ML_CATEGORY
+### Example: Converting a GeoPackage to Label Images
 
+```bash
+python src/multi_channel_dataset_creation/geopackage_to_label_v2.py   --geopackage example_dataset/labels/example_dataset.gpkg   --input_folder example_dataset/data/rgb/   --output_folder example_dataset/labels/large_labels/   --atribute ML_CATEGORY
+```
 
+---
 
+## 📘 Notes
 
+- The tool is designed for geospatial datasets with consistent coordinate systems.  
+- Each channel (RGB, CIR, OrthoRGB, OrthoCIR, DSM, DTM) should be aligned and georeferenced properly before processing.
+
+---
+
+## 📄 License
+
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
