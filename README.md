@@ -68,7 +68,7 @@ For more help on the usage type
 python src/multi_channel_dataset_creation/create_dataset.py -h
 
 An example on how to create label images from a geopackage is:
-python src/multi_channel_dataset_creation/geopackage_to_label_v2.py --geopackage example_dataset/labels/example_dataset.gpkg --input_folder example_dataset/data/rgb/
+python src/multi_channel_dataset_creation/geopackage_to_label_v2.py --geopackage example_dataset/labels/example_dataset.gpkg --input_folder example_dataset/data/rgb/ --output_folder example_dataset/labels/large_label/ --atribute ML_CATEGORY
 
 
 
